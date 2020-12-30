@@ -7,7 +7,10 @@ import pandas as pd
 from numba import jit
 from scipy.special import comb, binom
 
-from .containment import *
+# Import all containment methods 
+from ._containment import _r2_containment
+from ._containment import _r2_enum_containment
+from ._containment import _simplex_containment
 
 def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
     """
@@ -33,14 +36,14 @@ def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
     list
         Depth values for each row or observation.
     """
+    band_depths = []
 
     # Some common error handling 
     if J < 2:
         raise ValueError('Error: Parameter J must be greater than or equal to 2')
     
     if len(data) == 1:
-        band_depths = []
-        for row in len(data[0]):
+        for row in range(0, len(data[0])):
             band_depths.append(_band_depth(data=data, curve=row, containment=containment, J=J))
 
     return band_depths
@@ -74,14 +77,15 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2) -> float:
     band_depth = 0
     n = len(data)
     
-    # Select our containment definition if it is in our pre-defined list 
+    # Select our containment definition if it is in our pre-defined list
     if containment == 'r2':
-        containment = _r2_containment
+        cdef = _r2_containment
     elif containment == 'r2_enum':
-        containment = _r2_enum_containment
+        cdef = _r2_enum_containment
     elif containment == 'simplex':
-        containment = _simplex_containment
+        cdef = _simplex_containment
     else:
+        # TODO: Allow user to pass in custom definition of containment
         raise ValueError('Error: Unknown or unspecified definition of containment')
 
     # Reset index of our data 
@@ -109,7 +113,7 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2) -> float:
         for sequence in subseq:
             subseq_df = data.loc[list(sequence), :]
 
-            S_nj += containment(data=subseq_df, curve=curve_data)
+            S_nj += cdef(data=subseq_df, curve=curve_data)
 
         band_depth += S_nj / binom(n, j)
     

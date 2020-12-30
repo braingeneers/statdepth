@@ -22,7 +22,7 @@ def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
     curve, and the band made up from the first N/2 of N curves is the 50%
     central region.
 
-    Parameters
+    Parameters:
     ----------
     data : list of DataFrames
         Functions to calculate band depth from. Each DataFrame should be an n x p matrix which is a function evaluated at all timepoints. 
@@ -31,8 +31,9 @@ def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
     Containment: Callable or string
         Defines what containment means for the dataset. For functions from R-->R, we use the standard ordering on R. For higher dimensional spaces, we implement a simplex method. 
         A full list can be found in the README, as well as instructions on passing a custom definition for containment.  
-    Returns
-    -------
+    
+    Returns:
+    ----------
     list
         Depth values for each row or observation.
     """
@@ -51,7 +52,7 @@ def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
 def subsequences(s, l):
     '''Returns a list of all possible subsequences of the given length from the given input list
     Parameters:
-    -------------
+    ----------
     s: List to enumerate
     l: length of subsequences to find
     '''
@@ -63,7 +64,7 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
-    ----------------
+    ----------
     data: An n x p matrix where our rows come from R. Each observation should define a curve, in the functional sense. 
 
     curve: The particular function we would like to calculate band curve for. Given as a row of our original DataFrame. 

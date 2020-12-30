@@ -11,11 +11,12 @@ def is_valid_containment(containment) -> bool:
     '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function
     
     Parameters:
-    -------------
+    ----------
     containment: Function (Callable) to check validity of 
 
 
     Returns:
+    ----------
     Boolean indicating the validity of the passed function
     '''
 
@@ -25,7 +26,7 @@ def is_valid_containment(containment) -> bool:
 def _r2_containment(data: pd.DataFrame, curve: pd.Series) -> float:
     '''Produces \lambda_r with the given input data, using the standard ordering on R as the definition for containment.
     Parameters:
-    -------------
+    ----------
 
     data: Array of real-valued functions that define our band in R^2
     curve: Function to check containment on 

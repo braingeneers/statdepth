@@ -9,7 +9,7 @@ from scipy.special import comb, binom
 
 from .containment import *
 
-def banddepth(data: list, J=2, containment='r2', method='MBD'):
+def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
     """
     Calculate the band depth for a set of functional curves.
 
@@ -30,55 +30,20 @@ def banddepth(data: list, J=2, containment='r2', method='MBD'):
         A full list can be found in the README, as well as instructions on passing a custom definition for containment.  
     Returns
     -------
-    ndarray
-        Depth values for functional curves.
+    list
+        Depth values for each row or observation.
     """
 
     # Some common error handling 
     if J < 2:
         raise ValueError('Error: Parameter J must be greater than or equal to 2')
     
-    if J >= len(data):
-        raise ValueError('Error: Parameter J must be less than or equal to the number of observations len(df)')
-
-    # Check if we're dealing with real-valued functions
-    if len(data) == 0:
-        data = data[0]
-
-    n, p = data.shape
-    rv = np.argsort(data, axis=0)
-    rmat = np.argsort(rv, axis=0) + 1
-
-    if J == 2:
-        # This code is an explicit solution for J=2 and therefore cannot be generalized. 
-        # band depth
-        def _fbd2():
-            down = np.min(rmat, axis=1) - 1
-            up = n - np.max(rmat, axis=1)
-            return (up * down + n - 1) / comb(n, 2)
-
-        # modified band depth
-        def _fmbd():
-            down = rmat - 1
-            up = n - rmat
-            return ((np.sum(up * down, axis=1) / p) + n - 1) / comb(n, 2)
-
-        if method == 'BD2':
-            depth = _fbd2()
-        elif method == 'MBD':
-            depth = _fmbd()
-        else:
-            raise ValueError("Unknown input value for parameter `method`.")
-
-        return depth
-    else:
+    if len(data) == 1:
         band_depths = []
-        for row in len(data):
+        for row in len(data[0]):
             band_depths.append(_band_depth(data=data, curve=row, containment=containment, J=J))
-    
-        return band_depths
 
-    return None
+    return band_depths
 
 def subsequences(s, l):
     '''Returns a list of all possible subsequences of the given length from the given input list
@@ -143,7 +108,7 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2) -> float:
         # Get generalized containment for this value of J=j
         for sequence in subseq:
             subseq_df = data.loc[list(sequence), :]
-            
+
             S_nj += containment(data=subseq_df, curve=curve_data)
 
         band_depth += S_nj / binom(n, j)

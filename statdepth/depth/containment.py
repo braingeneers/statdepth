@@ -7,8 +7,8 @@ import pandas as pd
 from numba import jit
 from scipy.special import comb, binom
 
-def _is_valid_containment(containment) -> bool: 
-    '''Checks if the given function is a valid definition for containment. Used when use passes a custom containment function
+def is_valid_containment(containment) -> bool: 
+    '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function
     
     Parameters:
     -------------
@@ -22,7 +22,7 @@ def _is_valid_containment(containment) -> bool:
     pass 
 
 
-def _r2_containment(data: pd.DataFrame, curve: pd.Series) -> int:
+def _r2_containment(data: pd.DataFrame, curve: pd.Series) -> float:
     '''Produces \lambda_r with the given input data, using the standard ordering on R as the definition for containment.
     Parameters:
     -------------
@@ -49,13 +49,13 @@ def _r2_containment(data: pd.DataFrame, curve: pd.Series) -> int:
     return 1
 
 
-def _r2_enum_containment(data: pd.DataFrame, curve: pd.Series) -> int:
+def _r2_enum_containment(data: pd.DataFrame, curve: pd.Series) -> float:
     '''Implements the r2_enum definition of containment, where we treat each component in the vector valued function as a real valued function, and calculate containment for each one. If all the components are contained in the curved defined by that componenent, then we say the function is contained'''
 
     pass
 
 
-def _simplex_containment(data: pd.DataFrame, curve: pd.Series):
+def _simplex_containment(data: pd.DataFrame, curve: pd.Series) -> float:
     '''Implements the simplex definition of containment for multivariate functions in R^n
         '''
 

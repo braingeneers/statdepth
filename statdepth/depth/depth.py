@@ -143,7 +143,7 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2) -> float:
         # Get generalized containment for this value of J=j
         for sequence in subseq:
             subseq_df = data.loc[list(sequence), :]
-
+            
             S_nj += containment(data=subseq_df, curve=curve_data)
 
         band_depth += S_nj / binom(n, j)

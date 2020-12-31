@@ -2,7 +2,7 @@
 This package implements depth calculation methods for multivariate time-series data.
 
 ## 1. What is functional depth?
-Functional depth, specifically band depth, is a generalization of the median to a set of functions. Given a set of functions (or curves), we'd answer the question: in what sense is a curve the most central? 
+Functional depth, specifically band depth, is a generalization of the median to a set of functions. Given a set of functions (or curves), functional depth answers the question: how can we order our curves with respect to centrality/outlyingness? 
 
 This method implements the theory proposed in the paper *On the Concept of Depth for Functional Data* by authors López-Pintado and Juan Romo. 
 
@@ -13,7 +13,7 @@ To set up the development environment, run
 conda env create --file environment.yml
 ```
 
-To install locally, navigate to the download and run
+To install locally, run
 
 ```
 pip install .
@@ -52,7 +52,7 @@ banddepth([df], containment='r2', J=2)
 
 Again, if a single item is passed in the list, *it is assumed we are in the univariate case*. This is because there is no way to detect internally where to "split" the DataFrame to isolate each function in the multivariate case. 
 
-#### ii. Multivariate functions
+#### iii. Multivariate functions
 
 In the case of **multivariate functions**, each DataFrame in a list should be a function where the *columns* are the *features* and the rows are the *time indices*. For example, if we had the three multivariate observations given by
 ```Python
@@ -84,12 +84,12 @@ banddepth([df1, df2, df3], containment='r2_enum', J=2)
 
 ## 4. Containment
 
-The methodology implemented here requires a notion of "containment" of a function f within the band defined by other functions. In R^2, we can check this pointwise. In higher dimensional space, there are more options. 
+The methodology implemented here requires a notion of "containment" of a function within a band. In R^2, we can check this pointwise. In higher dimensional space, there are more options. 
 
-We have the following notions of containment:  
+Currently, we have the following notions of containment:  
 - `'r2'`: Standard pointwise interval containment
-- `'r2_enum'`: Treats each component in our vector-valued function as a real-valued function, and then uses the standard pointwise interval definition.
-- `'simplex'`: TODO  
+- `'r2_enum'`: Treats each component in our vector-valued function as a real-valued function, and then uses the standard pointwise interval definition. (TODO)
+- `'simplex'`: A point is contained if it is contained in all simplices defined by the other curves
 
 #### i. Using an alternative definition of containment
 
@@ -103,11 +103,11 @@ def containment(
 ) -> float
 ```
 
-The relaxation parameter is optional, and is used to relax the strict definition of containment into a definition that considers the proportion of time a function is contained in the band (or simplex). 
+Where the returned float is a value between 0 and 1. The relaxation parameter is optional, and is used to relax the strict definition of containment into a definition that considers the proportion of time a function is contained in the band (or simplex). 
 
 # 5. Methods
 
-`banddepth(data: list, J=2, containment='r2', method='MBD')`:  
+`banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False)`:  
 
     Calculate the band depth for a set of functional curves.
 
@@ -117,16 +117,50 @@ The relaxation parameter is optional, and is used to relax the strict definition
     curve, and the band made up from the first N/2 of N curves is the 50%
     central region.
 
-    Parameters
+    Parameters:
     ----------
-    data : ndarray
-        Functions to calculate band depth from. Each DataFrame should be an n x p matrix which is a function evaluated at all timepoints. 
+    data : list of DataFrames
+        Functions to calculate band depth from
     J: int (default=2)
         J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
-    Containment: Callable or string
+    containment: Callable or string (default='r2')
         Defines what containment means for the dataset. For functions from R-->R, we use the standard ordering on R. For higher dimensional spaces, we implement a simplex method. 
         A full list can be found in the README, as well as instructions on passing a custom definition for containment.  
-    Returns
-    -------
-    ndarray
-        Depth values for functional curves.
+    relax: bool
+        If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
+    deep_check: bool (default=False)
+        If True, perform a more extensive error checking routine. Optional because it can be computationally expensive for large datasets. 
+
+    Returns:
+    ----------
+    pd.Series: Depth values for each function.
+
+`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False)`
+
+    Calculate the sample band depth for a set of functional curves.
+
+    This is done by
+    1. Splitting the data of n curves into K blocks of size ~n/K
+    2. Computing band depth with respect to each block
+    3. Returning the average of these
+
+    For K << n, this should approximate the band depth well. 
+
+    Parameters:
+    ----------
+    data: list of DataFrames
+        Functions to calculate band depth from
+    K: int 
+        Computes band depth by averaging band depth across K blocks of our original curves 
+    J: int (default=2)
+        J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
+    containment: Callable or string (default='r2')
+        Defines what containment means for the dataset.  
+    relax: bool
+        If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
+    deep_check: bool (default=False)
+        If True, perform a more extensive error checking routine. Optional because it can be computationally expensive for large datasets. 
+
+    Returns:
+    ----------
+    pd.Series: Depth values for each function.

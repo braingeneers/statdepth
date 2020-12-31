@@ -44,7 +44,7 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
 
     Returns:
     ----------
-    list: Depth values for each row or observation.
+    pd.Series: Depth values for each function.
     """
 
     # Handle common errors
@@ -95,7 +95,7 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
 
     Returns:
     ----------
-    list: Depth values for each row or observation.
+    pd.Series: Depth values for each function.
     """
     samples = []
     depths = []

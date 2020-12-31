@@ -89,7 +89,8 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
     ----------
     list: Depth values for each row or observation.
     """
-    band_depth_samples = []
+    samples = []
+    depths = []
 
     # Handle common errros
     _handle_depth_errors(data=data, J=J, deep_check=deep_check)
@@ -100,10 +101,18 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
     if len(data) == 1:
         df = data[0]
         ss = df.shape[0] // K
+        
+        # Compute band depths with respect to each sample
         for _ in range(K):
             t = df.sample(n=ss)
             df = df.drop(t.index)
-            band_depth_samples.append(banddepth(data=[t], J=J, containment=containment, relax=relax, deep_check=deep_check))
+            samples.append(banddepth(data=[t], J=J, containment=containment, relax=relax, deep_check=deep_check))
+        
+        # Average them
+        for k in range(df.shape[1]):
+            t = [samples[i][k] for i in range(K)]
+            depths.append(np.mean(t))
+
     else:
         # Multivariate case: partition list of DataFrames randomly, compute band depth w.r.t those
         shuffled = data.copy()
@@ -113,8 +122,7 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
         for _ in range(K):
             pass
         
-
-    return np.mean(band_depth_samples)
+    return depths
 
 def _handle_depth_errors(data: List[pd.DataFrame], J: int, deep_check=False) -> None:
     '''
@@ -143,7 +151,7 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, deep_check=False) -> 
 
     # Make sure J < len(data) in the univariate and multivariate case
     if len(data) == 1 and J >= len(data[0]) or len(data) > 1 and J >= len(data):
-        raise ValueError('Error: Parameter J must be less than or equal to the number of observations')
+        raise ValueError('Error: Parameter J must be less than the number of observations')
     
     # Check dtypes of all columns over all DataFrames. Optional because this might be expensive
     if deep_check:

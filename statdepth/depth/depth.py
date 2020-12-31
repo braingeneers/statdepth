@@ -12,7 +12,7 @@ from ._containment import _r2_containment
 from ._containment import _r2_enum_containment
 from ._containment import _simplex_containment
 
-def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
+def banddepth(data: list, J=2, containment='r2', relax=False):
     """
     Calculate the band depth for a set of functional curves.
 
@@ -25,7 +25,7 @@ def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
     Parameters:
     ----------
     data : list of DataFrames
-        Functions to calculate band depth from. Each DataFrame should be an n x p matrix which is a function evaluated at all timepoints. 
+        Functions to calculate band depth from
     J: int (default=2)
         J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
     Containment: Callable or string
@@ -34,20 +34,68 @@ def banddepth(data: list, J=2, containment='r2', method='MBD') -> list:
     
     Returns:
     ----------
-    list
-        Depth values for each row or observation.
+    list: Depth values for each row or observation.
     """
-    band_depths = []
 
-    # Some common error handling 
+    # If only one item in the list, it is the real-valued case
+    if len(data) == 1:
+        band_depths = []
+        df = data[0]
+        for row in range(0, len(df)):
+            band_depths.append(_band_depth(data=df, curve=row, containment=containment, J=J))
+        return band_depths
+    else: 
+        pass
+    
+    return None
+
+
+def samplebanddepth(data: list, K: int, J=2, containment='r2', relax=False):
+    """
+    Calculate the sample band depth for a set of functional curves.
+
+    This is done by
+    1. Splitting the data of n curves into K blocks of size ~n/K
+    2. Computing band depth with respect to each block
+    3. Returning the average of these
+
+    For K << n, this should approximate the band depth well. 
+
+    Parameters:
+    ----------
+    data: list of DataFrames
+        Functions to calculate band depth from
+    K: int 
+        Computes band depth by averaging band depth across K blocks of our original curves 
+    J: int (default=2)
+        J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
+    Containment: Callable or string
+        Defines what containment means for the dataset.  
+    
+    Returns:
+    ----------
+    list: Depth values for each row or observation.
+    """
+
+    
+    pass
+
+def _handle_depth_errors(data: list, J: int) -> None:
+    '''
+        
+    '''
+    # J = 0,1 doesn't make sense
     if J < 2:
         raise ValueError('Error: Parameter J must be greater than or equal to 2')
-    
-    if len(data) == 1:
-        for row in range(0, len(data[0])):
-            band_depths.append(_band_depth(data=data, curve=row, containment=containment, J=J))
 
-    return band_depths
+    # Make sure a non-empty list is passed
+    if len(data) == 0:
+        raise ValueError('Error: No data passed')
+
+    # Make sure J < len(data) in the univariate and multivariate case
+    if len(data) == 1 and J >= len(data[0]) or len(data) > 1 and J >= len(data):
+        raise ValueError('Error: Parameter J must be less than or equal to the number of observations')
+
 
 def subsequences(s, l):
     '''Returns a list of all possible subsequences of the given length from the given input list
@@ -55,23 +103,33 @@ def subsequences(s, l):
     ----------
     s: List to enumerate
     l: length of subsequences to find
+
+
+    Returns:
+    ----------
+    list: List of subsequences
     '''
     
     return sorted(set([i for i in combinations(s, l)]))
 
 
-def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2) -> float:
+def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2, relax=False) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
     ----------
     data: An n x p matrix where our rows come from R. Each observation should define a curve, in the functional sense. 
 
-    curve: The particular function we would like to calculate band curve for. Given as a row of our original DataFrame. 
+    curve: The particular function we would like to calculate band curve for. Given as a column of our original DataFrame, either column name or index. 
 
     containment: function that defines containment for the particular data. For example, in R^2 this would be a discrete subset 
 
     J=2: Defaulted to 2. 
+
+    Returns:
+    ----------
+    float: Depth value for the given function with respect to the data passed 
+
     """
     
     # Initialize band depth, n
@@ -89,11 +147,11 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2) -> float:
         # TODO: Allow user to pass in custom definition of containment
         raise ValueError('Error: Unknown or unspecified definition of containment')
 
-    # Reset index of our data 
-    data = data.reset_index(drop=True)
+    # # Reset index of our data 
+    # data = data.reset_index(drop=True)
 
     # Grab the data for our curve so numerical slicing is guaranteed to work
-    curve_data = data.loc[curve, :]
+    curve_data = data.iloc[:, curve]
 
     # Drop the curve (we don't want it used in defining our band/generalized band -- doesn't make sense)
     data = data.drop(curve)
@@ -112,7 +170,7 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2) -> float:
 
         # Get generalized containment for this value of J=j
         for sequence in subseq:
-            subseq_df = data.loc[list(sequence), :]
+            subseq_df = data.iloc[:, list(sequence)]
 
             S_nj += cdef(data=subseq_df, curve=curve_data)
 

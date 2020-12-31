@@ -81,7 +81,8 @@ from statdepth.depth import banddepth
 banddepth([df1, df2, df3], containment='r2_enum', J=2)
 ```
 
-## 3. Methods
+## 4. Containment
+
 The methodology implemented here requires a notion of "containment" of a function f within the band defined by other functions. In R^2, we can check this pointwise. In higher dimensional space, there are more options. 
 
 We have the following notions of containment:  
@@ -89,6 +90,21 @@ We have the following notions of containment:
 - `'r2_enum'`: Enumerates over samples of our vector valued functions, treating each as a scalar in R, and then uses the standard pointwise interval containment definition.
 - `'simplex'`: TODO  
 
+#### i. Using an alternative definition of containment
+
+To use your own definition of containment, simply pass a containment function into the `containment` parameter of `banddepth`. A containment function must be structured in the following way:
+
+```Python
+def containment(
+    data: pd.DataFrame, 
+    curve: int, 
+    relax=False
+) -> float
+```
+
+The relaxation parameter is optional, and is used to relax the strict definition of containment into a definition that considers the proportion of time a function is contained in the band (or simplex). 
+
+# 5. Methods
 
 `banddepth(data: list, J=2, containment='r2', method='MBD')`:  
 

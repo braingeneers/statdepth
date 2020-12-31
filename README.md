@@ -15,9 +15,14 @@ conda env create --file environment.yml
 
 This code is written in Python, with most methods written in [Numpy](https://numpy.org/). It also uses [numba](https://numba.pydata.org/), a high performance Python compiler. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN, so this should remove any speed issues Python has. Depending on how this ends up being used, [dask](https://dask.org/) may also be implemented for parallelization. 
 
-We make the following assumptions about your dataset:
+## 3. Usage
 
+### i. Data Structure
 Your data is indexed by time.  This is so our depth calculation can create a depth for each time increment, as well as across all time increments.  
+
+Either your data is a set of real valued functions, or your data is a set of multivariate functions. We consider the two cases:
+
+#### ii. Real-valued functions
 
 Dataset example for a set of functions f_i: R --> R:
 ```Python
@@ -38,9 +43,43 @@ f_5    2    2    2    2    1
 
 ```
 
-Each x_i is a timepoint, each row is a function f_i. 
+Each x_i is a timepoint, each row is a function f_i. In this case, we compute band depth using 
 
-In the case of multivariate functions, each DataFrame in the list should 
+```Python 
+from statdepth.depth import banddepth
+
+banddepth([df], containment='r2', J=2)
+```
+
+#### ii. Multivariate functions
+
+In the case of **multivariate functions**, each DataFrame in a list should be a function where the *columns* are the *features* and the rows are the *time indices*. For example, if we had the three multivariate observations given by
+```Python
+>>> df1
+       size  weight  co_amount
+00:00   1.0       2          3
+00:50   4.0       5          6
+01:25   0.5       1          2
+>>> df2
+       size  weight  co_amount
+00:00     3       2          1
+00:50     5       4          3
+01:25     1       1          0
+>>> df3
+       size  weight  co_amount
+00:00   1.0       2          3
+00:50   9.0      10          1
+01:25   0.5       1          2
+
+```
+
+Then to compute band depth, we would use 
+
+```Python
+from statdepth.depth import banddepth
+
+banddepth([df1, df2, df3], containment='r2_enum', J=2)
+```
 
 ## 3. Methods
 The methodology implemented here requires a notion of "containment" of a function f within the band defined by other functions. In R^2, we can check this pointwise. In higher dimensional space, there are more options. 

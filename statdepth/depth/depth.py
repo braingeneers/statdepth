@@ -55,7 +55,7 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
         df = data[0]
         for col in df.columns:
             band_depths.append(_univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
-        return band_depths
+        return pd.Series(index=df.columns, data=band_depths)
     else: 
         # Multivariate case
         pass
@@ -112,6 +112,8 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
         for k in range(df.shape[1]):
             t = [samples[i][k] for i in range(K)]
             depths.append(np.mean(t))
+
+        depths = pd.Series(index=df.columns, data=depths)
 
     else:
         # Multivariate case: partition list of DataFrames randomly, compute band depth w.r.t those

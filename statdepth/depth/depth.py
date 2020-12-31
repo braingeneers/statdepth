@@ -34,10 +34,14 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
         Functions to calculate band depth from
     J: int (default=2)
         J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
-    Containment: Callable or string
+    containment: Callable or string (default='r2')
         Defines what containment means for the dataset. For functions from R-->R, we use the standard ordering on R. For higher dimensional spaces, we implement a simplex method. 
         A full list can be found in the README, as well as instructions on passing a custom definition for containment.  
-    
+    relax: bool
+        If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
+    deep_check: bool (default=False)
+        If True, perform a more extensive error checking routine. Optional because it can be computationally expensive for large datasets. 
+
     Returns:
     ----------
     list: Depth values for each row or observation.
@@ -82,9 +86,13 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
         Computes band depth by averaging band depth across K blocks of our original curves 
     J: int (default=2)
         J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
-    Containment: Callable or string
+    containment: Callable or string (default='r2')
         Defines what containment means for the dataset.  
-    
+    relax: bool
+        If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
+    deep_check: bool (default=False)
+        If True, perform a more extensive error checking routine. Optional because it can be computationally expensive for large datasets. 
+
     Returns:
     ----------
     list: Depth values for each row or observation.
@@ -126,7 +134,7 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
         
     return depths
 
-def _handle_depth_errors(data: List[pd.DataFrame], J: int, deep_check=False) -> None:
+def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Callable, str], deep_check=False) -> None:
     '''
     Handle errors in band depth methods 
 
@@ -136,13 +144,14 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, deep_check=False) -> 
         Functions to calculate band depth from
     J: int
         Parameter J for computing band depth
-    
+    containment:
+        Definition of containment, either a string or bool
+
     Returns:
     ----------
     None: Nothing is returned, but exceptions are raised if needed
     '''
-
-    #TODO: Make deep_check a parameter in higher level functions
+    
     # J = 0,1 doesn't make sense
     if J < 2:
         raise ValueError('Error: Parameter J must be greater than or equal to 2')
@@ -155,13 +164,18 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, deep_check=False) -> 
     if len(data) == 1 and J >= len(data[0]) or len(data) > 1 and J >= len(data):
         raise ValueError('Error: Parameter J must be less than the number of observations')
     
-    # Check dtypes of all columns over all DataFrames. Optional because this might be expensive
+    if len(data) > 1 and containment == 'r2':
+        raise ValueError('Error: containment argument \'r2\' is invalid for multivariate data. Use one of [\'r2_enum\', \'simplex \'] or a passed containment method. ')
+
     if deep_check:
+        # Check dtypes of all columns over all DataFrames. Optional because this might be expensive
         for df in data:
             df = pd.to_numeric(df)
             for col in df:
                 if not np.issubdtype(df[col].dtype, np.number):
                     raise ValueError('Error: DataFrame must only contain numeric dtypes')
+    
+    
 
 def subsequences(s: list, l: int):
     '''Returns a list of all possible subsequences of the given length from the given input list

@@ -13,6 +13,12 @@ To set up the development environment, run
 conda env create --file environment.yml
 ```
 
+To install locally, navigate to the download and run
+
+```
+pip install .
+```
+
 This code is written in Python, with most methods written in [Numpy](https://numpy.org/). It also uses [numba](https://numba.pydata.org/), a high performance Python compiler. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN, so this should remove any speed issues Python has. Depending on how this ends up being used, [dask](https://dask.org/) may also be implemented for parallelization. 
 
 ## 3. Usage
@@ -81,8 +87,8 @@ banddepth([df1, df2, df3], containment='r2_enum', J=2)
 The methodology implemented here requires a notion of "containment" of a function f within the band defined by other functions. In R^2, we can check this pointwise. In higher dimensional space, there are more options. 
 
 We have the following notions of containment:  
-- `'r2'`: Standard pointwise interval containment  
-- `'r2_enum'`: Enumerates over samples of our vector valued functions, treating each as a scalar in R, and then uses the standard pointwise interval containment definition.
+- `'r2'`: Standard pointwise interval containment
+- `'r2_enum'`: Treats each component in our vector-valued function as a real-valued function, and then uses the standard pointwise interval definition.
 - `'simplex'`: TODO  
 
 #### i. Using an alternative definition of containment
@@ -92,7 +98,7 @@ To use your own definition of containment, simply pass a containment function in
 ```Python
 def containment(
     data: pd.DataFrame, 
-    curve: int, 
+    curve: Union[str, int], 
     relax=False
 ) -> float
 ```

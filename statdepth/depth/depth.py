@@ -48,7 +48,7 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
     """
 
     # Handle common errors
-    _handle_depth_errors(data=data, J=J, deep_check=deep_check)
+    _handle_depth_errors(data=data, J=J, containment=containment, deep_check=deep_check)
 
     # Select containment definition
     cdef = _select_containment(containment=containment)
@@ -101,7 +101,7 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
     depths = []
 
     # Handle common errros
-    _handle_depth_errors(data=data, J=J, deep_check=deep_check)
+    _handle_depth_errors(data=data, J=J, containment=containment, deep_check=deep_check)
 
     cdef = _select_containment(containment=containment)
     
@@ -152,6 +152,19 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
     None: Nothing is returned, but exceptions are raised if needed
     '''
     
+    # Type checking
+    if not isinstance(data, list):
+        raise ValueError('Error: data must be passed as a list')
+
+    if not isinstance(J, int):
+        raise ValueError('Error: J must be an integer')
+
+    if not (isinstance(containment, str) or isinstance(containment, Callable)):
+        raise ValueError('Error: containment must be of type str or Callable')
+
+    if not isinstance(deep_check, bool):
+        raise ValueError('Error: deep_check must be of type bool')
+
     # J = 0,1 doesn't make sense
     if J < 2:
         raise ValueError('Error: Parameter J must be greater than or equal to 2')
@@ -222,7 +235,7 @@ def _univariate_band_depth(data: pd.DataFrame, curve: int, relax: bool, containm
     # Grab the data for our curve so numerical slicing is guaranteed to work
     curve_data = data.loc[:, curve]
 
-    # Drop the curve (we don't want it used in defining our band/generalized band -- doesn't make sense)
+    # Drop the curve
     data = data.drop(curve, axis=1)
 
     # Define our index to be the columns of our dataset, excluding the last row (for indexing reasons)

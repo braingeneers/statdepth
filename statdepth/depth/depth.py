@@ -1,18 +1,24 @@
+import random 
+
 from itertools import combinations
+
 from typing import Callable
+from typing import List 
+from typing import Union 
 
 import numpy as np
 import scipy as sp 
 import pandas as pd 
+
 from numba import jit
 from scipy.special import comb, binom
 
-# Import all containment methods 
 from ._containment import _r2_containment
 from ._containment import _r2_enum_containment
 from ._containment import _simplex_containment
+from ._containment import _select_containment
 
-def banddepth(data: list, J=2, containment='r2', relax=False):
+def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False):
     """
     Calculate the band depth for a set of functional curves.
 
@@ -37,22 +43,27 @@ def banddepth(data: list, J=2, containment='r2', relax=False):
     list: Depth values for each row or observation.
     """
 
-    _handle_depth_errors(data=data, J=J)
+    # Handle common errors
+    _handle_depth_errors(data=data, J=J, deep_check=deep_check)
+
+    # Select containment definition
+    cdef = _select_containment(containment=containment)
 
     # If only one item in the list, it is the real-valued case
     if len(data) == 1:
         band_depths = []
         df = data[0]
         for col in df.columns:
-            band_depths.append(_band_depth(data=df, curve=col, relax=relax, containment=containment, J=J))
+            band_depths.append(univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
         return band_depths
     else: 
+        # Multivariate case
         pass
     
     return None
 
 
-def samplebanddepth(data: list, K: int, J=2, containment='r2', relax=False):
+def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False):
     """
     Calculate the sample band depth for a set of functional curves.
 
@@ -78,12 +89,34 @@ def samplebanddepth(data: list, K: int, J=2, containment='r2', relax=False):
     ----------
     list: Depth values for each row or observation.
     """
-    _handle_depth_errors(data=data, J=J)
+    band_depth_samples = []
 
+    # Handle common errros
+    _handle_depth_errors(data=data, J=J, deep_check=deep_check)
+
+    cdef = _select_containment(containment=containment)
     
-    pass
+    # Univariate case
+    if len(data) == 1:
+        df = data[0]
+        ss = df.shape[0] // K
+        for _ in range(K):
+            t = df.sample(n=ss)
+            df = df.drop(t.index)
+            band_depth_samples.append(banddepth(data=[t], J=J, containment=containment, relax=relax, deep_check=deep_check))
+    else:
+        # Multivariate case: partition list of DataFrames randomly, compute band depth w.r.t those
+        shuffled = data.copy()
+        random.shuffle(shuffled)
+        ss = len(data) // K 
 
-def _handle_depth_errors(data: list, J: int) -> None:
+        for _ in range(K):
+            pass
+        
+
+    return np.mean(band_depth_samples)
+
+def _handle_depth_errors(data: List[pd.DataFrame], J: int, deep_check=False) -> None:
     '''
     Handle errors in band depth methods 
 
@@ -98,6 +131,8 @@ def _handle_depth_errors(data: list, J: int) -> None:
     ----------
     None: Nothing is returned, but exceptions are raised if needed
     '''
+
+    #TODO: Make deep_check a parameter in higher level functions
     # J = 0,1 doesn't make sense
     if J < 2:
         raise ValueError('Error: Parameter J must be greater than or equal to 2')
@@ -109,14 +144,23 @@ def _handle_depth_errors(data: list, J: int) -> None:
     # Make sure J < len(data) in the univariate and multivariate case
     if len(data) == 1 and J >= len(data[0]) or len(data) > 1 and J >= len(data):
         raise ValueError('Error: Parameter J must be less than or equal to the number of observations')
+    
+    # Check dtypes of all columns over all DataFrames. Optional because this might be expensive
+    if deep_check:
+        for df in data:
+            df = pd.to_numeric(df)
+            for col in df:
+                if not np.issubdtype(df[col].dtype, np.number):
+                    raise ValueError('Error: DataFrame must only contain numeric dtypes')
 
-
-def subsequences(s, l):
+def subsequences(s: list, l: int):
     '''Returns a list of all possible subsequences of the given length from the given input list
     Parameters:
     ----------
-    s: List to enumerate
-    l: length of subsequences to find
+    s: list
+        List to enumerate
+    l: int
+        Length of subsequences to compute
 
 
     Returns:
@@ -127,18 +171,19 @@ def subsequences(s, l):
     return sorted(set([i for i in combinations(s, l)]))
 
 
-def _band_depth(data: pd.DataFrame, curve: int, relax: bool, containment='r2', J=2) -> float:
+def univariate_band_depth(data: pd.DataFrame, curve: int, relax: bool, containment: Callable, J=2) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
     ----------
-    data: An n x p matrix where our rows come from R. Each observation should define a curve, in the functional sense. 
-
-    curve: The particular function we would like to calculate band curve for. Given as a column of our original DataFrame, either column name or index. 
-
-    containment: function that defines containment for the particular data. For example, in R^2 this would be a discrete subset 
-
-    J=2: Defaulted to 2. 
+    data: pd.DataFrame
+        An n x p matrix where our rows come from R. Each observation should define a curve, in the functional sense. 
+    curve: int
+        The particular function we would like to calculate band curve for. Given as a column of our original DataFrame, either column name or index. 
+    containment: Callable or str
+        Function that defines containment for the particular data. For example, in R^2 this would be a discrete subset 
+    J=2: int
+        Parameter J in band depth. Defaulted to 2. 
 
     Returns:
     ----------
@@ -150,17 +195,6 @@ def _band_depth(data: pd.DataFrame, curve: int, relax: bool, containment='r2', J
     band_depth = 0
     n = data.shape[1]
     
-    # Select our containment definition if it is in our pre-defined list
-    if containment == 'r2':
-        cdef = _r2_containment
-    elif containment == 'r2_enum':
-        cdef = _r2_enum_containment
-    elif containment == 'simplex':
-        cdef = _simplex_containment
-    else:
-        # TODO: Allow user to pass in custom definition of containment
-        raise ValueError('Error: Unknown or unspecified definition of containment')
-
     # Grab the data for our curve so numerical slicing is guaranteed to work
     curve_data = data.loc[:, curve]
 
@@ -183,7 +217,7 @@ def _band_depth(data: pd.DataFrame, curve: int, relax: bool, containment='r2', J
         for sequence in subseq:
             subseq_df = data.loc[:, list(sequence)]
 
-            S_nj += cdef(data=subseq_df, curve=curve_data, relax=relax)
+            S_nj += containment(data=subseq_df, curve=curve_data, relax=relax)
 
         band_depth += S_nj / binom(n, j)
     

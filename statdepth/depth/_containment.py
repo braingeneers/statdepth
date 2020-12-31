@@ -37,22 +37,26 @@ def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:
     0 if the function is not contained in the curve, 1 if it is
     '''
 
-    # Generate discrete band 
+    containment = 0
+    
     y_range = []
-    for time_index in data.columns:
-        y_range.append([data[time_index].min(), data[time_index].max()])
-
+    
+    mins = data.min(axis=1)
+    maxs = data.max(axis=1)
+    
+    intervals = [[i, j] for i, j in zip(mins, maxs)]
+    
     # Check if each value in the curve is entirely contained within the band 
     for index, val in enumerate(curve):
         # If any value is not, then break out. This is strict containment!
-        if not (y_range[index][0] <= val <= y_range[index][1]):
-            return 0
+        if intervals[index][0] <= val <= intervals[index][1]:
+            containment += 1
+        
+    return containment / len(curve) if relax else containment // len(curve)
 
-    return 1
-
-
+    
 def _r2_enum_containment(data: list, curve: pd.DataFrame, relax: bool) -> float:
-    '''Implements the r2_enum definition of containment, where we treat each component in the vector valued function as a real valued function, and calculate containment for each one. If all the components are contained in the curved defined by that componenent, then we say the function is contained. 
+    '''Implements the r2_enum definition of containment, where we treat each component in the vector valued function as a real valued function, and calculate containment for each one. If all the components are contained in the curved defined by that componenent, then we say the function is contained.
     
     Parameters:
     ----------

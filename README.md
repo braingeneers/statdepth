@@ -26,30 +26,25 @@ Either your data is a set of real valued functions, or your data is a set of mul
 
 Dataset example for a set of functions f_i: R --> R:
 ```Python
->>> df = pd.DataFrame({'x_0': [1, 2, 1, 1, 2], 
-...                    'x_1': [2, 3, 4, 2, 2], 
-...                    'x_2': [1, 3, 1, 3, 2],
-...                    'x_3': [1, 2, 1, 1, 2],
-...                    'x_4': [2, 3, 4, 2, 1]}, 
-...                   index=['f_1', 'f_2', 'f_3', 'f_4', 'f_5'])
-
 >>> df
-     x_0  x_1  x_2  x_3  x_4
-f_1    1    2    1    1    2
-f_2    2    3    3    2    3
-f_3    1    4    1    1    4
-f_4    1    2    3    1    2
-f_5    2    2    2    2    1
+     f_1  f_2  f_3  f_4  f_5
+x_0    1    2    1    1    2
+x_1    2    3    4    2    2
+x_2    1    3    1    3    2
+x_3    1    2    1    1    2
+x_4    2    3    4    2    1
 
 ```
 
-Each x_i is a timepoint, each row is a function f_i. In this case, we compute band depth using 
+Each x_i is a timepoint, each column is a function f_i. In this case, we compute band depth using 
 
 ```Python 
 from statdepth.depth import banddepth
 
 banddepth([df], containment='r2', J=2)
 ```
+
+Again, if a single item is passed in the list, *it is assumed we are in the univariate case*. This is because there is no way to detect internally where to "split" the DataFrame to isolate each function in the multivariate case. 
 
 #### ii. Multivariate functions
 

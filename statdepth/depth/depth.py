@@ -37,12 +37,14 @@ def banddepth(data: list, J=2, containment='r2', relax=False):
     list: Depth values for each row or observation.
     """
 
+    _handle_depth_errors(data=data, J=J)
+
     # If only one item in the list, it is the real-valued case
     if len(data) == 1:
         band_depths = []
         df = data[0]
-        for row in range(0, len(df)):
-            band_depths.append(_band_depth(data=df, curve=row, containment=containment, J=J))
+        for col in df.columns:
+            band_depths.append(_band_depth(data=df, curve=col, relax=relax, containment=containment, J=J))
         return band_depths
     else: 
         pass
@@ -76,13 +78,25 @@ def samplebanddepth(data: list, K: int, J=2, containment='r2', relax=False):
     ----------
     list: Depth values for each row or observation.
     """
+    _handle_depth_errors(data=data, J=J)
 
     
     pass
 
 def _handle_depth_errors(data: list, J: int) -> None:
     '''
-        
+    Handle errors in band depth methods 
+
+    Parameters:
+    ----------
+    data: list
+        Functions to calculate band depth from
+    J: int
+        Parameter J for computing band depth
+    
+    Returns:
+    ----------
+    None: Nothing is returned, but exceptions are raised if needed
     '''
     # J = 0,1 doesn't make sense
     if J < 2:
@@ -113,7 +127,7 @@ def subsequences(s, l):
     return sorted(set([i for i in combinations(s, l)]))
 
 
-def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2, relax=False) -> float:
+def _band_depth(data: pd.DataFrame, curve: int, relax: bool, containment='r2', J=2) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
@@ -132,9 +146,9 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2, relax=Fal
 
     """
     
-    # Initialize band depth, n
+    # Initialize band depth, n (number of curves)
     band_depth = 0
-    n = len(data)
+    n = data.shape[1]
     
     # Select our containment definition if it is in our pre-defined list
     if containment == 'r2':
@@ -147,32 +161,29 @@ def _band_depth(data: pd.DataFrame, curve: int, containment='r2', J=2, relax=Fal
         # TODO: Allow user to pass in custom definition of containment
         raise ValueError('Error: Unknown or unspecified definition of containment')
 
-    # # Reset index of our data 
-    # data = data.reset_index(drop=True)
-
     # Grab the data for our curve so numerical slicing is guaranteed to work
-    curve_data = data.iloc[:, curve]
+    curve_data = data.loc[:, curve]
 
     # Drop the curve (we don't want it used in defining our band/generalized band -- doesn't make sense)
-    data = data.drop(curve)
+    data = data.drop(curve, axis=1)
 
-    # Define our index to be the index of our dataset, excluding the last row (for indexing reasons)
-    idx = list(data.index)
+    # Define our index to be the columns of our dataset, excluding the last row (for indexing reasons)
+    idx = list(data.columns)
     
-    # iterate from 2,...,J
+    # Compute band depth
     for j in range(2, J + 1):
         
         # Initialize S_n^(j) as defined in the paper
         S_nj = 0
 
-        # Get a list of all possible subsequences of samples (rows)
+        # Get a list of all possible subsequences of samples (cols)
         subseq = subsequences(idx, j)
 
         # Get generalized containment for this value of J=j
         for sequence in subseq:
-            subseq_df = data.iloc[:, list(sequence)]
+            subseq_df = data.loc[:, list(sequence)]
 
-            S_nj += cdef(data=subseq_df, curve=curve_data)
+            S_nj += cdef(data=subseq_df, curve=curve_data, relax=relax)
 
         band_depth += S_nj / binom(n, j)
     

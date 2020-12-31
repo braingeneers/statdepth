@@ -54,7 +54,7 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
         band_depths = []
         df = data[0]
         for col in df.columns:
-            band_depths.append(univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
+            band_depths.append(_univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
         return band_depths
     else: 
         # Multivariate case
@@ -171,7 +171,7 @@ def subsequences(s: list, l: int):
     return sorted(set([i for i in combinations(s, l)]))
 
 
-def univariate_band_depth(data: pd.DataFrame, curve: int, relax: bool, containment: Callable, J=2) -> float:
+def _univariate_band_depth(data: pd.DataFrame, curve: int, relax: bool, containment: Callable, J=2) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:

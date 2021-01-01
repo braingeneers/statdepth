@@ -115,7 +115,7 @@ Where the returned float is a value between 0 and 1. The relaxation parameter is
 
 # 5. Methods
 
-`banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False)`:  
+`banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.DataFrame, pd.Series]`:  
 
     Calculate the band depth for a set of functional curves.
 
@@ -143,7 +143,7 @@ Where the returned float is a value between 0 and 1. The relaxation parameter is
     ----------
     pd.Series: Depth values for each function.
 
-`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> pd.Series`
+`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.DataFrame, pd.Series]`
 
     Calculate the sample band depth for a set of functional curves.
 

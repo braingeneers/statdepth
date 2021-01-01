@@ -17,6 +17,7 @@ from ._containment import _r2_containment
 from ._containment import _r2_enum_containment
 from ._containment import _simplex_containment
 from ._containment import _select_containment
+from ._containment import _is_valid_containment
 
 def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False):
     """
@@ -48,7 +49,7 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
     """
 
     # Handle common errors
-    _handle_depth_errors(data=data, J=J, containment=containment, deep_check=deep_check)
+    _handle_depth_errors(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
 
     # Select containment definition
     cdef = _select_containment(containment=containment)
@@ -101,19 +102,19 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
     depths = []
 
     # Handle common errros
-    _handle_depth_errors(data=data, J=J, containment=containment, deep_check=deep_check)
+    _handle_depth_errors(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
 
     cdef = _select_containment(containment=containment)
     
     # Univariate case
     if len(data) == 1:
         df = data[0]
-        ss = df.shape[0] // K
+        ss = df.shape[1] // K
         
         # Compute band depths with respect to each sample
         for _ in range(K):
-            t = df.sample(n=ss)
-            df = df.drop(t.index)
+            t = df.sample(n=ss, axis=1)
+            df = df.drop(t.columns, axis=1)
             samples.append(banddepth(data=[t], J=J, containment=containment, relax=relax, deep_check=deep_check))
         
         # Average them
@@ -134,7 +135,7 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
         
     return depths
 
-def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Callable, str], deep_check=False) -> None:
+def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Callable, str], relax: bool, deep_check: bool) -> None:
     '''
     Handle errors in band depth methods 
 
@@ -154,31 +155,31 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
     
     # Type checking
     if not isinstance(data, list):
-        raise ValueError('Error: data must be passed as a list')
+        raise ValueError('data must be passed as a list.')
 
     if not isinstance(J, int):
-        raise ValueError('Error: J must be an integer')
+        raise ValueError('J must be an integer.')
 
     if not (isinstance(containment, str) or isinstance(containment, Callable)):
-        raise ValueError('Error: containment must be of type str or Callable')
+        raise ValueError('containment must be of type str or Callable.')
 
-    if not isinstance(deep_check, bool):
-        raise ValueError('Error: deep_check must be of type bool')
-
+    if not (isinstance(deep_check, bool) or isinstance(relax, bool)):
+        raise ValueError('deep_check must be of type bool.')
+    
     # J = 0,1 doesn't make sense
     if J < 2:
-        raise ValueError('Error: Parameter J must be greater than or equal to 2')
+        raise ValueError('Parameter J must be greater than or equal to 2.')
 
     # Make sure a non-empty list is passed
     if len(data) == 0:
-        raise ValueError('Error: No data passed')
+        raise ValueError('No data passed.')
 
     # Make sure J < len(data) in the univariate and multivariate case
     if len(data) == 1 and J >= len(data[0]) or len(data) > 1 and J >= len(data):
-        raise ValueError('Error: Parameter J must be less than the number of observations')
+        raise ValueError('Parameter J must be less than the number of observations.')
     
     if len(data) > 1 and containment == 'r2':
-        raise ValueError('Error: containment argument \'r2\' is invalid for multivariate data. Use one of [\'r2_enum\', \'simplex \'] or a passed containment method. ')
+        raise ValueError('containment argument \'r2\' is invalid for multivariate data. Use one of [\'r2_enum\', \'simplex \'] or a passed containment method. ')
 
     if deep_check:
         # Check dtypes of all columns over all DataFrames. Optional because this might be expensive
@@ -186,8 +187,7 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
             df = pd.to_numeric(df)
             for col in df:
                 if not np.issubdtype(df[col].dtype, np.number):
-                    raise ValueError('Error: DataFrame must only contain numeric dtypes')
-    
+                    raise ValueError('DataFrame must only contain numeric dtypes.')
     
 
 def subsequences(s: list, l: int):
@@ -208,7 +208,7 @@ def subsequences(s: list, l: int):
     return sorted(set([i for i in combinations(s, l)]))
 
 
-def _univariate_band_depth(data: pd.DataFrame, curve: int, relax: bool, containment: Callable, J=2) -> float:
+def _univariate_band_depth(data: pd.DataFrame, curve: Union[int, str], relax: bool, containment: Callable, J=2) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
@@ -239,21 +239,22 @@ def _univariate_band_depth(data: pd.DataFrame, curve: int, relax: bool, containm
     data = data.drop(curve, axis=1)
 
     # Define our index to be the columns of our dataset, excluding the last row (for indexing reasons)
-    idx = list(data.columns)
+    cols = list(data.columns)
     
     # Compute band depth
     for j in range(2, J + 1):
         
-        # Initialize S_n^(j) as defined in the paper
         S_nj = 0
 
         # Get a list of all possible subsequences of samples (cols)
-        subseq = subsequences(idx, j)
+        subseq = subsequences(cols, j)
 
-        # Get generalized containment for this value of J=j
+        # Iterate over all subsequences
         for sequence in subseq:
+            # Grab data for the current subsequence
             subseq_df = data.loc[:, list(sequence)]
 
+            # Check containment for the current subsequence
             S_nj += containment(data=subseq_df, curve=curve_data, relax=relax)
 
         band_depth += S_nj / binom(n, j)

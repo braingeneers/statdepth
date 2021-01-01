@@ -20,9 +20,9 @@ def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, 
     ----------
     Boolean indicating the validity of the passed function
     '''
-    
+
     if isinstance(containment, str):
-        raise ValueError('containment argument \'{}\' is invalid. Use one of [\'r2_enum\', \'simplex \'] or a pass a custom containment function.'.format(containment))
+        raise ValueError('containment argument \'{}\' is invalid. Use one of [\'r2\', \'r2_enum\', \'simplex \'] or a pass a custom containment function.'.format(containment))
 
     sig = signature(containment)
     params = sig.parameters

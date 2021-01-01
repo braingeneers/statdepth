@@ -109,12 +109,12 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
     # Univariate case
     if len(data) == 1:
         df = data[0]
-        ss = df.shape[0] // K
+        ss = df.shape[1] // K
         
         # Compute band depths with respect to each sample
         for _ in range(K):
-            t = df.sample(n=ss)
-            df = df.drop(t.index)
+            t = df.sample(n=ss, axis=1)
+            df = df.drop(t.columns, axis=1)
             samples.append(banddepth(data=[t], J=J, containment=containment, relax=relax, deep_check=deep_check))
         
         # Average them
@@ -208,7 +208,7 @@ def subsequences(s: list, l: int):
     return sorted(set([i for i in combinations(s, l)]))
 
 
-def _univariate_band_depth(data: pd.DataFrame, curve: int, relax: bool, containment: Callable, J=2) -> float:
+def _univariate_band_depth(data: pd.DataFrame, curve: Union[int, str], relax: bool, containment: Callable, J=2) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
@@ -244,16 +244,17 @@ def _univariate_band_depth(data: pd.DataFrame, curve: int, relax: bool, containm
     # Compute band depth
     for j in range(2, J + 1):
         
-        # Initialize S_n^(j) as defined in the paper
         S_nj = 0
 
         # Get a list of all possible subsequences of samples (cols)
         subseq = subsequences(cols, j)
 
-        # Get generalized containment for this value of J=j
+        # Iterate over all subsequences
         for sequence in subseq:
+            # Grab data for the current subsequence
             subseq_df = data.loc[:, list(sequence)]
 
+            # Check containment for the current subsequence
             S_nj += containment(data=subseq_df, curve=curve_data, relax=relax)
 
         band_depth += S_nj / binom(n, j)

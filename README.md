@@ -33,21 +33,29 @@ Either your data is a set of real valued functions, or your data is a set of mul
 Dataset example for a set of functions f_i: R --> R:
 ```Python
 >>> df
-     f_1  f_2  f_3  f_4  f_5
-x_0    1    2    1    1    2
-x_1    2    3    4    2    2
-x_2    1    3    1    3    2
-x_3    1    2    1    1    2
-x_4    2    3    4    2    1
+     f_0  f_1  f_2  f_3  f_4  f_5
+x_0    1    2    3  6.0    9    8
+x_1    2    4    4  7.0    9    8
+x_2    3    5    4  6.5   12   10
+x_3    2    6    2  6.0   11   10
+x_4    1    2    1  7.0   11    9
 
 ```
 
 Each x_i is a timepoint, each column is a function f_i. In this case, we compute band depth using 
 
 ```Python 
-from statdepth.depth import banddepth
+>>> from statdepth.depth import banddepth
 
-banddepth([df], containment='r2', J=2)
+>>> banddepth([df], J=2).sort_values(ascending=False)
+f_3    0.400000
+f_5    0.266667
+f_2    0.200000
+f_1    0.200000
+f_4    0.000000
+f_0    0.000000
+dtype: float64
+
 ```
 
 Again, if a single item is passed in the list, *it is assumed we are in the univariate case*. This is because there is no way to detect internally where to "split" the DataFrame to isolate each function in the multivariate case. 
@@ -135,7 +143,7 @@ Where the returned float is a value between 0 and 1. The relaxation parameter is
     ----------
     pd.Series: Depth values for each function.
 
-`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False)`
+`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> pd.Series`
 
     Calculate the sample band depth for a set of functional curves.
 

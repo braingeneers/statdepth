@@ -1,5 +1,5 @@
 from itertools import combinations
-from typing import Callable
+from typing import Callable, Union
 
 import numpy as np
 import scipy as sp 
@@ -7,21 +7,30 @@ import pandas as pd
 from numba import jit
 from scipy.special import comb, binom
 
-def _is_valid_containment(containment) -> bool: 
+from inspect import signature
+
+def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, pd.DataFrame], bool], float]) -> None: 
     '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function
     
     Parameters:
     ----------
     containment: Function (Callable) to check validity of 
 
-
     Returns:
     ----------
     Boolean indicating the validity of the passed function
     '''
+    
+    if isinstance(containment, str):
+        raise ValueError('containment argument \'{}\' is invalid. Use one of [\'r2_enum\', \'simplex \'] or a pass a custom containment function.'.format(containment))
 
-    pass 
+    sig = signature(containment)
+    params = sig.parameters
 
+    if len(params) != 3:
+        raise ValueError('Custom containment method has incorrect number of parameters. Expected 3, recieved {}'.format(len(params))) 
+
+    return containment
 
 def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:
     '''Produces \lambda_r with the given input data, using the standard ordering on R as the definition for containment.
@@ -113,5 +122,4 @@ def _select_containment(containment: str) -> Callable:
     elif containment == 'simplex':
         return _simplex_containment
     else:
-        # TODO: Allow user to pass in custom definition of containment
-        raise ValueError('Error: Unknown or unspecified definition of containment')
+        return _is_valid_containment(containment=containment)

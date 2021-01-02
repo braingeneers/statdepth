@@ -24,9 +24,7 @@ This code is written in Python, with most methods written in [Numpy](https://num
 ## 3. Usage
 
 ### i. Data Structure
-Your data is indexed by time.  This is so our depth calculation can create a depth for each time increment, as well as across all time increments.  
-
-Either your data is a set of real valued functions, or your data is a set of multivariate functions. We consider the two cases:
+Your data is indexed by time. Either your data is a set of real valued functions, or your data is a set of multivariate functions. We consider the two cases:
 
 #### ii. Real-valued functions
 
@@ -58,7 +56,7 @@ dtype: float64
 
 ```
 
-Again, if a single item is passed in the list, *it is assumed we are in the univariate case*. This is because there is no way to detect internally where to "split" the DataFrame to isolate each function in the multivariate case. 
+(Note: the `sort_values()` is not implemented, but rather `banddepth` returns a `pd.Series` object). If a single item is passed in the list, *it is assumed we are in the univariate case*. This is because there is no way to detect internally where to "split" the DataFrame to isolate each function in the multivariate case. 
 
 #### iii. Multivariate functions
 

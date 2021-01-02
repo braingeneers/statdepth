@@ -162,6 +162,12 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
 
     if not (isinstance(containment, str) or isinstance(containment, Callable)):
         raise ValueError('containment must be of type str or Callable.')
+<<<<<<< HEAD
+=======
+
+    if not isinstance(deep_check, bool):
+        raise ValueError('deep_check must be of type bool.')
+>>>>>>> b6deabde463175db3848a0b5f8f080aef362d8fe
 
     if not (isinstance(deep_check, bool) or isinstance(relax, bool)):
         raise ValueError('deep_check must be of type bool.')

@@ -19,7 +19,7 @@ from ._containment import _simplex_containment
 from ._containment import _select_containment
 from ._containment import _is_valid_containment
 
-def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False):
+def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the band depth for a set of functional curves.
 
@@ -68,7 +68,7 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
     return None
 
 
-def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False):
+def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the sample band depth for a set of functional curves.
 
@@ -137,7 +137,7 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
 
 def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Callable, str], relax: bool, deep_check: bool) -> None:
     '''
-    Handle errors in band depth methods 
+    Handles errors in band depth methods.
 
     Parameters:
     ----------
@@ -162,15 +162,12 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
 
     if not (isinstance(containment, str) or isinstance(containment, Callable)):
         raise ValueError('containment must be of type str or Callable.')
-<<<<<<< HEAD
-=======
 
     if not isinstance(deep_check, bool):
         raise ValueError('deep_check must be of type bool.')
->>>>>>> b6deabde463175db3848a0b5f8f080aef362d8fe
 
-    if not (isinstance(deep_check, bool) or isinstance(relax, bool)):
-        raise ValueError('deep_check must be of type bool.')
+    if not isinstance(relax, bool):
+        raise ValueError('relax must be of type bool')
     
     # J = 0,1 doesn't make sense
     if J < 2:
@@ -196,8 +193,9 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
                     raise ValueError('DataFrame must only contain numeric dtypes.')
     
 
-def subsequences(s: list, l: int):
-    '''Returns a list of all possible subsequences of the given length from the given input list
+def _subsequences(s: list, l: int) -> list:
+    '''Returns a list of all possible subsequences of length l from the given input list
+
     Parameters:
     ----------
     s: list
@@ -242,7 +240,8 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[int, str], relax: bo
     curve_data = data.loc[:, curve]
 
     # Drop the curve
-    data = data.drop(curve, axis=1)
+    if curve in data.columns:
+        data = data.drop(curve, axis=1)
 
     # Define our index to be the columns of our dataset, excluding the last row (for indexing reasons)
     cols = list(data.columns)
@@ -253,7 +252,7 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[int, str], relax: bo
         S_nj = 0
 
         # Get a list of all possible subsequences of samples (cols)
-        subseq = subsequences(cols, j)
+        subseq = _subsequences(cols, j)
 
         # Iterate over all subsequences
         for sequence in subseq:

@@ -27,17 +27,10 @@ def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, 
 
     sig = signature(containment)
     params = sig.parameters
-<<<<<<< HEAD
 
     if len(params) != 3:
         raise ValueError('Custom containment method has incorrect number of parameters. Expected 3, recieved {}'.format(len(params))) 
 
-=======
-
-    if len(params) != 3:
-        raise ValueError('Custom containment method has incorrect number of parameters. Expected 3, recieved {}'.format(len(params))) 
-
->>>>>>> b6deabde463175db3848a0b5f8f080aef362d8fe
     return containment
 
 def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:

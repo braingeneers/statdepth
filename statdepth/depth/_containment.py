@@ -56,17 +56,19 @@ def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:
     
     y_range = []
     
+    # Grab the mins/maxs across all rows (functions at each time index)
     mins = data.min(axis=1)
     maxs = data.max(axis=1)
     
+    # Generate intervals in R
     intervals = [[i, j] for i, j in zip(mins, maxs)]
     
-    # Check if each value in the curve is entirely contained within the band 
+    # Check if each value in the curve is contained within the band 
     for index, val in enumerate(curve):
-        # If any value is not, then break out. This is strict containment!
         if intervals[index][0] <= val <= intervals[index][1]:
             containment += 1
-        
+    
+    # If relax=True, then we return the proportion of points in the band, else, Python integer division will round down to 0 unless all points are contained in the band (strict containment)
     return containment / len(curve) if relax else containment // len(curve)
 
 

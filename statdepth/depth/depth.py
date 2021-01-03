@@ -1,5 +1,5 @@
 import random 
-
+import warnings
 from itertools import combinations
 
 from typing import Callable
@@ -54,15 +54,19 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
     # Select containment definition
     cdef = _select_containment(containment=containment)
 
-    # If only one item in the list, it is the real-valued case
+    # If only one item in the list, it is the real-valued case (by assumption)
     if len(data) == 1:
         band_depths = []
         df = data[0]
+
+        # Calculate band depth for each sample (column)
         for col in df.columns:
-            band_depths.append(_univariate_band_depth(data=df, curve=df[col], relax=relax, containment=cdef, J=J))
+            band_depths.append(_univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
+
+        # Return a series indexed by our samples
         return pd.Series(index=df.columns, data=band_depths)
     else: 
-        # Multivariate case
+        # TODO: Multivariate case
         pass
     
     return None
@@ -112,17 +116,25 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
         orig = df.copy()
         ss = df.shape[1] // K
         
+        # Iterate over curves (columns)
         for col in orig.columns:
             depths = []
 
-            for i in range(K):
+            # For each curve, compute sample band depth using K blocks of size ~len(df)/K
+            for _ in range(K):
                 t = df.sample(n=ss, axis=1)
+
                 df = df.drop(t.columns, axis=1)
-                depths.append(_univariate_band_depth(data=t, curve=orig[col], relax=relax, containment=cdef, J=J))
+
+                t[col] = orig[col]
+
+                depths.append(_univariate_band_depth(data=t, curve=col, relax=relax, containment=cdef, J=J))
             
+            # Collect these estimates
             samples.append(depths)
             df = orig.copy()
 
+        # Average them and return a series
         samples = pd.Series(index=df.columns, data=[np.mean(i) for i in samples])
 
     else:
@@ -213,7 +225,7 @@ def _subsequences(s: list, l: int) -> list:
     return sorted(set([i for i in combinations(s, l)]))
 
 
-def _univariate_band_depth(data: pd.DataFrame, curve: pd.Series, relax: bool, containment: Callable, J=2) -> float:
+def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bool, containment: Callable, J=2) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
@@ -221,7 +233,7 @@ def _univariate_band_depth(data: pd.DataFrame, curve: pd.Series, relax: bool, co
     data: pd.DataFrame
         An n x p matrix where our rows come from R. Each observation should define a curve, in the functional sense. 
     curve: int
-        The particular function we would like to calculate band curve for. Given as a column of our original DataFrame, either column name or index. 
+        The particular function we would like to calculate band curve for. Given as a column of our original DataFrame. 
     containment: Callable or str
         Function that defines containment for the particular data. For example, in R^2 this would be a discrete subset 
     J=2: int
@@ -236,25 +248,29 @@ def _univariate_band_depth(data: pd.DataFrame, curve: pd.Series, relax: bool, co
     # Initialize band depth, n (number of curves)
     band_depth = 0
     n = data.shape[1]
-
-    # Define our index to be the columns of our dataset, excluding the last row (for indexing reasons)
-    cols = list(data.columns)
     
+    # get curve series 
+    curvedata = data.loc[:, curve]
+
+    # Drop the curve we're calculating band depth for if it is contained in our DataFrame
+    if curve in data.columns:
+        data = data.drop(curve, axis=1)
+
     # Compute band depth
     for j in range(2, J + 1):
         
         S_nj = 0
 
         # Get a list of all possible subsequences of samples (cols)
-        subseq = _subsequences(cols, j)
+        subseq = _subsequences(list(data.columns), j)
 
         # Iterate over all subsequences
         for sequence in subseq:
             # Grab data for the current subsequence
-            subseq_df = data.loc[:, list(sequence)]
+            subseq_df = data.loc[:, sequence]
 
-            # Check containment for the current subsequence
-            S_nj += containment(data=subseq_df, curve=curve, relax=relax)
+            # Check containment for the data given the current subsequence
+            S_nj += containment(data=subseq_df, curve=curvedata, relax=relax)
 
         band_depth += S_nj / binom(n, j)
     

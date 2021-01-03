@@ -59,7 +59,7 @@ def banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep
         band_depths = []
         df = data[0]
         for col in df.columns:
-            band_depths.append(_univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
+            band_depths.append(_univariate_band_depth(data=df, curve=df[col], relax=relax, containment=cdef, J=J))
         return pd.Series(index=df.columns, data=band_depths)
     else: 
         # Multivariate case
@@ -109,20 +109,21 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
     # Univariate case
     if len(data) == 1:
         df = data[0]
+        orig = df.copy()
         ss = df.shape[1] // K
         
-        # Compute band depths with respect to each sample
-        for _ in range(K):
-            t = df.sample(n=ss, axis=1)
-            df = df.drop(t.columns, axis=1)
-            samples.append(banddepth(data=[t], J=J, containment=containment, relax=relax, deep_check=deep_check))
-        
-        # Average them
-        for k in range(df.shape[1]):
-            t = [samples[i][k] for i in range(K)]
-            depths.append(np.mean(t))
+        for col in orig.columns:
+            depths = []
 
-        depths = pd.Series(index=df.columns, data=depths)
+            for i in range(K):
+                t = df.sample(n=ss, axis=1)
+                df = df.drop(t.columns, axis=1)
+                depths.append(_univariate_band_depth(data=t, curve=orig[col], relax=relax, containment=cdef, J=J))
+            
+            samples.append(depths)
+            df = orig.copy()
+
+        samples = pd.Series(index=df.columns, data=[np.mean(i) for i in samples])
 
     else:
         # Multivariate case: partition list of DataFrames randomly, compute band depth w.r.t those
@@ -153,7 +154,7 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
     None: Nothing is returned, but exceptions are raised if needed
     '''
     
-    # Type checking
+    # Type checking for all variables
     if not isinstance(data, list):
         raise ValueError('data must be passed as a list.')
 
@@ -212,7 +213,7 @@ def _subsequences(s: list, l: int) -> list:
     return sorted(set([i for i in combinations(s, l)]))
 
 
-def _univariate_band_depth(data: pd.DataFrame, curve: Union[int, str], relax: bool, containment: Callable, J=2) -> float:
+def _univariate_band_depth(data: pd.DataFrame, curve: pd.Series, relax: bool, containment: Callable, J=2) -> float:
     """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
@@ -235,13 +236,6 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[int, str], relax: bo
     # Initialize band depth, n (number of curves)
     band_depth = 0
     n = data.shape[1]
-    
-    # Grab the data for our curve so numerical slicing is guaranteed to work
-    curve_data = data.loc[:, curve]
-
-    # Drop the curve
-    if curve in data.columns:
-        data = data.drop(curve, axis=1)
 
     # Define our index to be the columns of our dataset, excluding the last row (for indexing reasons)
     cols = list(data.columns)
@@ -260,7 +254,7 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[int, str], relax: bo
             subseq_df = data.loc[:, list(sequence)]
 
             # Check containment for the current subsequence
-            S_nj += containment(data=subseq_df, curve=curve_data, relax=relax)
+            S_nj += containment(data=subseq_df, curve=curve, relax=relax)
 
         band_depth += S_nj / binom(n, j)
     

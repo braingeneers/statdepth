@@ -11,10 +11,11 @@ from scipy.spatial import Delaunay
 from inspect import signature
 
 def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, pd.DataFrame], bool], float]) -> None: 
-    '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function
+    '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function.
     
     Parameters:
     ----------
+
     containment: Function (Callable) to check validity of 
 
     Returns:
@@ -22,6 +23,7 @@ def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, 
     Boolean indicating the validity of the passed function
     '''
 
+    # If we got here in _select_containment then the passed string is invalid
     if isinstance(containment, str):
         raise ValueError('containment argument \'{}\' is invalid. Use one of [\'r2\', \'r2_enum\', \'simplex \'] or a pass a custom containment function.'.format(containment))
 
@@ -122,8 +124,20 @@ def _simplex_containment(data: list, curve: pd.DataFrame, relax: bool) -> float:
     depth = 0
 
 
-def _select_containment(containment: str) -> Callable:
-    '''Helper function to select definition of containment'''
+def _select_containment(containment: Union[str, Callable]) -> Callable:
+    '''Helper function to select definition of containment
+    
+    Parameters:
+    ----------
+
+    containment: Union[str, Callable]
+        Containment string or function, used to select a built in containment method or handle a custom containment
+
+    Returns:
+    ----------
+    Callable: Returns the containment function, or raises an error 
+
+    '''
     
     # Select our containment definition if it is in our pre-defined list
     if containment == 'r2':

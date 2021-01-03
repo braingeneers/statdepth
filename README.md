@@ -53,10 +53,6 @@ f_1    0.200000
 f_4    0.000000
 f_0    0.000000
 dtype: float64
-<<<<<<< HEAD
-=======
-
->>>>>>> b6deabde463175db3848a0b5f8f080aef362d8fe
 ```
 
 (Note: the `sort_values()` is not implemented, but rather `banddepth` returns a `pd.Series` object). If a single item is passed in the list, *it is assumed we are in the univariate case*. This is because there is no way to detect internally where to "split" the DataFrame to isolate each function in the multivariate case. 
@@ -144,11 +140,7 @@ Where the returned float is a value between 0 and 1. The relaxation parameter is
     ----------
     pd.Series: Depth values for each function.
 
-<<<<<<< HEAD
-`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> pd.Series`
-=======
-`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.DataFrame, pd.Series]`
->>>>>>> b6deabde463175db3848a0b5f8f080aef362d8fe
+`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]`
 
     Calculate the sample band depth for a set of functional curves.
 

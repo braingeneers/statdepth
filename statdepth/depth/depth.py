@@ -200,7 +200,7 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
     if deep_check:
         # Check dtypes of all columns over all DataFrames. Optional because this might be expensive
         for df in data:
-            df = pd.to_numeric(df)
+            df = df.infer_objects()
             for col in df:
                 if not np.issubdtype(df[col].dtype, np.number):
                     raise ValueError('DataFrame must only contain numeric dtypes.')
@@ -216,13 +216,12 @@ def _subsequences(s: list, l: int) -> list:
     l: int
         Length of subsequences to compute
 
-
     Returns:
     ----------
     list: List of subsequences
     '''
     
-    return sorted(set([i for i in combinations(s, l)]))
+    return sorted(set(combinations(s, l)))
 
 
 def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bool, containment: Callable, J=2) -> float:

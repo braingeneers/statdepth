@@ -6,7 +6,7 @@ import scipy as sp
 import pandas as pd 
 from numba import jit
 from scipy.special import comb, binom
-from scipy.spatial import Delaunay
+from scipy.spatial import ConvexHull
 
 from inspect import signature
 
@@ -125,6 +125,36 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
 
     depth = 0
 
+def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
+    '''Checks if the point is in the convex hull formed by simplex_points
+    
+    Parameters:
+    ----------
+    
+    simplex_points: pd.DataFrame
+        List of n-dimensional points (rows) to form the simplex. 
+    point: pd.Series
+        n-dimensional point to check containment of 
+
+    
+    Returns:
+    ----------
+    bool: True if point is contained in the simplex, false otherwise
+    '''
+
+    # Generate convex hull and grab its vertices
+    hull = ConvexHull(simplex_points, incremental=True)
+    vertices = hull.vertices
+    
+    # Generate the convex hull with new point
+    hull.add_points([point])
+    
+    # Check if they are the same
+    # If they are, then the added point must be contained in the original hull
+    if len(vertices) != len(hull.vertices):
+        return False
+    
+    return all(vertices == hull.vertices)
 
 def _select_containment(containment: Union[str, Callable]) -> Callable:
     '''Helper function to select definition of containment

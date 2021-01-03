@@ -2,9 +2,10 @@
 This package implements depth calculation methods for multivariate time-series data.
 
 ## 1. What is functional depth?
-Functional depth, specifically band depth, is a generalization of the median to a set of functions. Given a set of functions (or curves), functional depth answers the question: how can we order our curves with respect to centrality/outlyingness? 
+Functional depth, specifically band depth, is a generalization of the median to a set of functions. Given a set of functions (or curves), band depths allows us to order our curves with respect to their "centrality." The larger the depth, the "deeper" the curve, and the curve with the highest band depth is the "most central" (in a not-so-formal sense 😀).
 
-This method implements the theory proposed in the paper *On the Concept of Depth for Functional Data* by authors López-Pintado and Juan Romo. 
+
+This method implements the theory proposed in the paper [*On the Concept of Depth for Functional Data*](https://www.researchgate.net/publication/33397608_On_the_Concept_of_Depth_for_Functional_Data) by López-Pintado and Juan Romo. 
 
 ## 2. Development
 
@@ -19,7 +20,9 @@ To install locally, run
 pip install .
 ```
 
-This code is written in Python, with most methods written in [Numpy](https://numpy.org/). It also uses [numba](https://numba.pydata.org/), a high performance Python compiler. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN, so this should remove any speed issues Python has. Depending on how this ends up being used, [dask](https://dask.org/) may also be implemented for parallelization. 
+This code is written in Python, with most methods written in [Numpy](https://numpy.org/). It also uses [numba](https://numba.pydata.org/), a high performance Python compiler. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN, so this should remove any speed issues Python has. 
+
+Depending on how this ends up being used, [dask](https://dask.org/) may also be implemented for parallelization. 
 
 ## 3. Usage
 
@@ -102,13 +105,17 @@ To use your own definition of containment, simply pass a containment function in
 
 ```Python
 def containment(
-    data: pd.DataFrame, 
-    curve: Union[str, int], 
+    data: Union[List[pd.DataFrame], pd.DataFrame], 
+    curve: Union[pd.DataFrame, pd.Series], 
     relax=False
 ) -> float
 ```
 
-Where the returned float is a value between 0 and 1. The relaxation parameter is optional, and is used to relax the strict definition of containment into a definition that considers the proportion of time a function is contained in the band (or simplex). 
+`data` should either take in a list of DataFrames (and a DataFrame for `curve`), or a single DataFrame (and a Series for `curve`) in the univariate and multivariate case, respectively. 
+
+The returned float should be a value between 0 and 1 (this is not enforced). 
+
+The relaxation parameter is optional, and is used to relax the strict definition of containment into a definition that considers the proportion of "time" a function is contained.
 
 # 5. Methods
 

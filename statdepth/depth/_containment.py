@@ -1,5 +1,5 @@
 from itertools import combinations
-from typing import Callable, Union
+from typing import Callable, Union, List
 
 import numpy as np
 import scipy as sp 
@@ -70,7 +70,7 @@ def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:
     return containment / len(curve) if relax else containment // len(curve)
 
 
-def _r2_enum_containment(data: list, curve: pd.DataFrame, relax: bool) -> float:
+def _r2_enum_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: bool) -> float:
     '''Implements the r2_enum definition of containment, where we treat each component in the vector valued function as a real valued function, and calculate containment for each one. If all the components are contained in the curved defined by that componenent, then we say the function is contained.
     
     Parameters:
@@ -102,7 +102,7 @@ def _r2_enum_containment(data: list, curve: pd.DataFrame, relax: bool) -> float:
     return depth / len(list) if relax else depth // len(list)
 
 
-def _simplex_containment(data: list, curve: pd.DataFrame, relax: bool) -> float:
+def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: bool) -> float:
     '''Implements the simplex definition of containment for multivariate functions in R^n
         
     Parameters:

@@ -134,7 +134,7 @@ def samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', rel
         for _ in range(K):
             pass
         
-    return depths
+    return samples
 
 def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Callable, str], relax: bool, deep_check: bool) -> None:
     '''

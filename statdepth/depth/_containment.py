@@ -1,14 +1,14 @@
 from itertools import combinations
 from typing import Callable, Union, List
+from inspect import signature
 
 import numpy as np
 import scipy as sp 
-import pandas as pd 
+import pandas as pd
+
 from numba import jit
 from scipy.special import comb, binom
 from scipy.spatial import ConvexHull
-
-from inspect import signature
 
 def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, pd.DataFrame], bool], float]) -> None: 
     '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function.
@@ -25,7 +25,7 @@ def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, 
 
     # If we got here in _select_containment then the passed string is invalid
     if isinstance(containment, str):
-        raise ValueError('containment argument \'{}\' is invalid. Use one of [\'r2\', \'r2_enum\', \'simplex \'] or a pass a custom containment function.'.format(containment))
+        raise ValueError(f'containment argument \'{containment}\' is invalid. Use one of [\'r2\', \'r2_enum\', \'simplex \'] or a pass a custom containment function.')
 
     sig = signature(containment)
     params = sig.parameters
@@ -120,7 +120,6 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
     Returns:
     ----------
     float: If relax=False, then 0 if the function is not contained in the curve, 1 if it is. If relax=True, then we consider the proportion of time the curve is in the band, so we will return a number between 0 and 1. 
-
     '''
 
     depth = 0
@@ -136,7 +135,6 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     point: pd.Series
         n-dimensional point to check containment of 
 
-    
     Returns:
     ----------
     bool: True if point is contained in the simplex, false otherwise
@@ -151,9 +149,11 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     
     # Check if they are the same
     # If they are, then the added point must be contained in the original hull
+    # If there are a different number of vertices, clearly the hulls are different
     if len(vertices) != len(hull.vertices):
-        return False
+        return False  
     
+    # Otherwise, make sure all the vertices are the same
     return all(vertices == hull.vertices)
 
 def _select_containment(containment: Union[str, Callable]) -> Callable:
@@ -179,4 +179,5 @@ def _select_containment(containment: Union[str, Callable]) -> Callable:
     elif containment == 'simplex':
         return _simplex_containment
     else:
+        # Otherwise check validity of the containment Callable
         return _is_valid_containment(containment=containment)

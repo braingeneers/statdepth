@@ -4,12 +4,11 @@ This package implements depth calculation methods for multivariate time-series d
 ## 1. What is functional depth?
 Functional depth, specifically band depth, is a generalization of the median to a set of functions. Given a set of functions (or curves), band depths allows us to order our curves with respect to their "centrality." The larger the depth, the "deeper" the curve, and the curve with the highest band depth is the "most central" (in a not-so-formal sense 😀).
 
-
 This method implements the theory proposed in the paper [*On the Concept of Depth for Functional Data*](https://www.researchgate.net/publication/33397608_On_the_Concept_of_Depth_for_Functional_Data) by López-Pintado and Juan Romo. 
 
 ## 2. Development
 
-To set up the development environment, run  
+To set up the development environment, run
 ```
 conda env create --file environment.yml
 ```
@@ -26,8 +25,8 @@ Depending on how this ends up being used, [dask](https://dask.org/) may also be 
 
 ## 3. Usage
 
-### i. Data Structure
-Your data is indexed by time. Either your data is a set of real valued functions, or your data is a set of multivariate functions. We consider the two cases:
+### i. Data Structure Assumptions
+Your data is indexed by time. Either your data is a set of real valued functions, or your data is a set of multivariate functions, with data collected at a discrete number of time points. We consider the two cases:
 
 #### ii. Real-valued functions
 
@@ -40,7 +39,6 @@ x_1    2    4    4  7.0    9    8
 x_2    3    5    4  6.5   12   10
 x_3    2    6    2  6.0   11   10
 x_4    1    2    1  7.0   11    9
-
 ```
 
 Each x_i is a timepoint, each column is a function f_i. In this case, we compute band depth using 

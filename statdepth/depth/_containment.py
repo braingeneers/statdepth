@@ -101,7 +101,7 @@ def _r2_enum_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
             t[col] = data[col]
     
 
-    return depth / len(list) if relax else depth // len(list)
+    return depth / len(data) if relax else depth // len(data)
 
 
 def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: bool) -> float:
@@ -124,6 +124,12 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
 
     depth = 0
 
+    for x in data[0].index:
+        depth += _is_in_simplex(simplex_points=[curve.loc[x, :] for curve in data], point=curve.loc[x, :])
+
+    return depth / len(data) if relax else depth // len(data)
+
+
 def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     '''Checks if the point is in the convex hull formed by simplex_points
     
@@ -140,8 +146,11 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     bool: True if point is contained in the simplex, false otherwise
     '''
 
-    # Generate convex hull and grab its vertices
-    hull = ConvexHull(simplex_points, incremental=True)
+    # Generate convex hull and grab its vertices. If this errors, the hull is degenerate and we consider the point not contained
+    try:
+        hull = ConvexHull(simplex_points, incremental=True)
+    except:
+        return False
     vertices = hull.vertices
     
     # Generate the convex hull with new point

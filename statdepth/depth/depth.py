@@ -233,6 +233,8 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
         An n x p matrix where our rows come from R. Each observation should define a curve, in the functional sense. 
     curve: int
         The particular function we would like to calculate band curve for. Given as a column of our original DataFrame. 
+    relax: bool
+        If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
     containment: Callable or str
         Function that defines containment for the particular data. For example, in R^2 this would be a discrete subset 
     J=2: int

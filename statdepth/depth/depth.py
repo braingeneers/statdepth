@@ -198,12 +198,19 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
         raise ValueError('containment argument \'r2\' is invalid for multivariate data. Use one of [\'r2_enum\', \'simplex \'] or a passed containment method. ')
 
     if deep_check:
-        # Check dtypes of all columns over all DataFrames. Optional because this might be expensive
+        # Check dtypes of all columns over all DataFrames. 
+        # Optional because this might be computationally expensive for very large datasets. 
+        indices = []
         for df in data:
+            indices.append(df.index)
             df = df.infer_objects()
             for col in df:
                 if not np.issubdtype(df[col].dtype, np.number):
                     raise ValueError('DataFrame must only contain numeric dtypes.')
+        # Check that all indices are the same.
+        if not all([all(indices[0] == i) for i in indices]):
+            raise ValueError('DataFrames indices must be the same')
+        
     
 
 def _subsequences(s: list, l: int) -> list:

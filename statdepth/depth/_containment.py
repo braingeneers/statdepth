@@ -147,10 +147,8 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     '''
 
     # Generate convex hull and grab its vertices. If this errors, the hull is degenerate and we consider the point not contained
-    try:
-        hull = ConvexHull(simplex_points, incremental=True)
-    except:
-        return False
+    hull = ConvexHull(simplex_points, incremental=True, qhull_options='QJ') # 'QJ' option allows geometric degeneracy
+
     vertices = hull.vertices
     
     # Generate the convex hull with new point
@@ -160,7 +158,7 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     # If they are, then the added point must be contained in the original hull
     # If there are a different number of vertices, clearly the hulls are different
     if len(vertices) != len(hull.vertices):
-        return False  
+        return False
     
     # Otherwise, make sure all the vertices are the same
     return all(vertices == hull.vertices)

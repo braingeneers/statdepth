@@ -8,7 +8,7 @@ import pandas as pd
 
 from numba import jit
 from scipy.special import comb, binom
-from scipy.spatial import ConvexHull
+from scipy.optimize import linprog
 
 def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, pd.DataFrame], bool], float]) -> None: 
     '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function.
@@ -129,7 +129,6 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
 
     return depth / len(data) if relax else depth // len(data)
 
-
 def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     '''Checks if the point is in the convex hull formed by simplex_points
     
@@ -146,22 +145,17 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     bool: True if point is contained in the simplex, false otherwise
     '''
 
-    # Generate convex hull and grab its vertices. If this errors, the hull is degenerate and we consider the point not contained
-    hull = ConvexHull(simplex_points, incremental=True, qhull_options='QJ') # 'QJ' option allows geometric degeneracy
-
-    vertices = hull.vertices
+    # Checks if the point can be expressed as a convex combination of the set of points of whom a subset defines a convex hull
+    n_points = len(simplex_points)
+    n_dim = len(point)
     
-    # Generate the convex hull with new point
-    hull.add_points([point])
+    c = np.zeros(n_points)
+    A = np.r_[simplex_points.T, np.ones((1,n_points))]
+    b = np.r_[point, np.ones(1)]
     
-    # Check if they are the same
-    # If they are, then the added point must be contained in the original hull
-    # If there are a different number of vertices, clearly the hulls are different
-    if len(vertices) != len(hull.vertices):
-        return False
+    lp = linprog(c, A_eq=A, b_eq=b)
     
-    # Otherwise, make sure all the vertices are the same
-    return all(vertices == hull.vertices)
+    return lp.success
 
 def _select_containment(containment: Union[str, Callable]) -> Callable:
     '''Helper function to select definition of containment

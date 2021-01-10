@@ -46,7 +46,7 @@ Each x_i is a timepoint, each column is a function f_i. In this case, we compute
 ```Python 
 >>> from statdepth.depth import banddepth
 
->>> banddepth([df], J=2).sort_values(ascending=False)
+>>> banddepth([df], J=2).ordered()
 f_3    0.400000
 f_5    0.266667
 f_2    0.200000
@@ -56,7 +56,7 @@ f_0    0.000000
 dtype: float64
 ```
 
-(Note: the `sort_values()` is not implemented, but rather `banddepth` returns a `pd.Series` object). If a single item is passed in the list, *it is assumed we are in the univariate case*. This is because there is no way to detect internally where to "split" the DataFrame to isolate each function in the multivariate case. 
+If a single item is passed in the list, *it is assumed we are in the univariate case*. This is because there is no way to detect internally where to "split" the DataFrame to isolate each function in the multivariate case. 
 
 #### iii. Multivariate functions
 

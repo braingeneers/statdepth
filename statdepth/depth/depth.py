@@ -1,34 +1,59 @@
 import pandas as pd 
 from typing import Callable, List, Union, Dict
+import plotly.graph_objects as go
 
 from ._depthcalculations import _banddepth, _samplebanddepth
-# import ._depthcalculations
 
 class _BandDepthSeries(pd.Series):
-    def __init__(self, depths):
+    def __init__(self, df, depths):
         super().__init__(data=depths)
 
+        self._orig_data = df
         self._depths = depths
-        self._ordered_depths_ = None
-        self._deepest_curve_ = None
+        self._ordered_depths = None
 
     def ordered(self, ascending=False):
-        if self._ordered_depths_ is None:
-            self._ordered_depths_ =  self._depths.sort_values(ascending=ascending)
-        return self._ordered_depths_
+        if self._ordered_depths is None:
+            self._ordered_depths =  self._depths.sort_values(ascending=ascending)
+        return self._ordered_depths
 
     def sorted(self, ascending=False):
         return self.ordered(ascending=ascending)
 
-    def deepest(self):
-        if self._ordered_depths_ is not None or (self._ordered_depths_ is None and self._deepest_curve_ is None):
-            sorted_depths = self._depths.sort_values(ascending=False)
-            self._deepest_curve_ = pd.Series(index=[sorted_depths.index[0]], data=[sorted_depths[0]])
-        return self._deepest_curve_
+    def deepest(self, n=1):
+        if self._ordered_depths is None:
+            self._ordered_depths = self._depths.sort_values(ascending=False)
+        
+        if n == 1:
+            return pd.Series(index=[list(self._ordered_depths.index)[0]], data=[self._ordered_depths.values[0]])
+        else:
+            return pd.Series(index=self._ordered_depths.index[0: n], data=self._ordered_depths.values[0: n])
     
+    def outlying(self, n=1):
+        if self._ordered_depths is None:
+            self._ordered_depths = self._depths.sort_values(ascending=False)
+
+        if n == 1:
+            return pd.Series(index=[list(self._ordered_depths.index)[-1]], data=[self._ordered_depths.values[-1]])
+        else:
+            return pd.Series(index=self._ordered_depths.index[-n: ], data=self._ordered_depths.values[-n: ])
+
     def median(self):
-        return self.deepest()
+        return self.deepest(n=1)
     
+    def plot_deepest(self, n=1):
+        s = self.deepest(n=n)
+        cols = self._orig_data.columns
+        x= self._orig_data.index
+
+        data=[go.Scatter(x=x, y=self._orig_data[y], mode='lines+markers', marker_color='Blue') for y in cols]
+        data.extend([go.Scatter(x=x, y=self._orig_data[y], mode='lines+markers', marker_color='Red') for y in s.index])
+
+        fig = go.Figure(data=data)
+        fig.update_layout(showlegend=False)
+
+        fig.show()
+
 class _BandDepthDataFrame(pd.DataFrame):
     def __init__(self, depths):
         super().__init__(data=depths)
@@ -36,11 +61,11 @@ class _BandDepthDataFrame(pd.DataFrame):
 
 def BandDepth(data: Union[List[pd.DataFrame], Dict[str, pd.DataFrame]], K=None, J=2, containment='r2', relax=False, deep_check=False):
     if K is not None:
-        data = _samplebanddepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
+        depth = _samplebanddepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
     else:
-        data = _banddepth(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
+        depth = _banddepth(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
 
-    if isinstance(data, pd.DataFrame):
-        return _BandDepthDataFrame(data)
+    if isinstance(depth, pd.DataFrame):
+        return _BandDepthDataFrame(depth)
     else:
-        return _BandDepthSeries(data)
+        return _BandDepthSeries(df=data[0], depths=depth)

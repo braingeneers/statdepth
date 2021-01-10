@@ -142,7 +142,7 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
 
     Returns:
     ----------
-    bool: True if point is contained in the simplex, false otherwise
+    bool: True if point is contained in the simplex, False otherwise
     '''
 
     # Checks if the point can be expressed as a convex combination of the set of points of whom a subset defines a convex hull
@@ -150,7 +150,7 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     n_dim = len(point)
     
     c = np.zeros(n_points)
-    A = np.r_[simplex_points.T, np.ones((1,n_points))]
+    A = np.r_[simplex_points.T, np.ones((1, n_points))]
     b = np.r_[point, np.ones(1)]
     
     lp = linprog(c, A_eq=A, b_eq=b)

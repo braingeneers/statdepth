@@ -99,14 +99,22 @@ Currently, we have the following notions of containment:
 
 #### i. Using an alternative definition of containment
 
-To use your own definition of containment, simply pass a containment function into the `containment` parameter of `banddepth`. A containment function must be structured in the following way:
+To use your own definition of containment, simply pass a containment function into the `containment` parameter of `banddepth`. A containment function should be structured similarly to the following (arguments are enforced):
 
 ```Python
 def containment(
     data: Union[List[pd.DataFrame], pd.DataFrame], 
     curve: Union[pd.DataFrame, pd.Series], 
     relax=False
-) -> float
+) -> float:
+
+    contained = 0
+    if len(data) == 1:
+        # Handle univariate case
+    else:
+        # Handle multivariate case
+    
+    return contained
 ```
 
 `data` should either take in a list of DataFrames (and a DataFrame for `curve`), or a single DataFrame (and a Series for `curve`) in the univariate and multivariate case, respectively. 

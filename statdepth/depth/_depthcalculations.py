@@ -219,7 +219,6 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
         if not all([all(indices[0] == i) for i in indices]):
             raise ValueError('DataFrames indices must be the same')
         
-    
 
 def _subsequences(s: list, l: int) -> list:
     '''Returns a list of all possible subsequences of length l from the given input list

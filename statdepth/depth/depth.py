@@ -3,10 +3,10 @@ from typing import Callable, List, Union, Dict
 import plotly.graph_objects as go
 
 from ._depthcalculations import _banddepth, _samplebanddepth
-from .abstract import FunctionalDepth
+from .abstract import AbstractDepth
 
 # Private class that wraps the band depth calculation methods with some extra attributes as well
-class _FunctionalDepthSeries(FunctionalDepth, pd.Series):
+class _FunctionalDepthSeries(AbstractDepth, pd.Series):
 
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(data=depths)
@@ -62,7 +62,7 @@ class _FunctionalDepthSeries(FunctionalDepth, pd.Series):
 
         fig.show()
 
-class _FunctionalDepthDataFrame(FunctionalDepth, pd.DataFrame):
+class _FunctionalDepthDataFrame(AbstractDepth, pd.DataFrame):
     def __init__(self, names: List[str], depths: pd.DataFrame):
         super().__init__(depths)
         self._names = names
@@ -80,9 +80,9 @@ class _FunctionalDepthDataFrame(FunctionalDepth, pd.DataFrame):
     def outlying(self, n=1):
         pass
 
-class _PointwiseDepth(FunctionalDepth, pd.Series):
+class _PointwiseDepth(AbstractDepth, pd.Series):
     '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''
-    
+
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
 
         self._orig_data = df
@@ -102,7 +102,7 @@ class _PointwiseDepth(FunctionalDepth, pd.Series):
         pass
 
 
-def BandDepth(data: List[pd.DataFrame], K=None, J=2, 
+def FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 
 containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthDataFrame]:
     '''
     Wrapper function that selects a private class depending on the dimensionality of the data passed. 
@@ -143,3 +143,6 @@ containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries
         return _FunctionalDepthDataFrame(names=keys, depths=depth)
     else:
         return _FunctionalDepthSeries(df=data[0], depths=depth)
+
+# def PointWiseDepth(data: pd.DataFrame, K=None, J=2, containment='r2', relax=False, deep_check=False) -> _PointwiseDepth:
+#     return _PointwiseDepth(None, None)

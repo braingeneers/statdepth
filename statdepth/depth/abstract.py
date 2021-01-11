@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class FunctionalDepth(ABC):
+class AbstractDepth(ABC):
     '''Abstract class for all Functional Depth classes. This should be used as the superclass in any future work.'''
 
     # Abstract methods

@@ -1,1 +1,1 @@
-from .depth.depth import BandDepth
+from .depth.depth import FunctionalDepth

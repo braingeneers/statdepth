@@ -3,8 +3,9 @@ import numpy as np
 
 from statdepth import FunctionalDepth
 
-df = pd.DataFrame(np.random.rand(5, 10), columns=list('ZXCVBNMLKJ'))
 
-bd = FunctionalDepth([df], J=2, relax=True)
+data = [pd.DataFrame(np.random.randint(0,30,size=(30, 3))) for _ in range(7)]
+
+bd = FunctionalDepth(data, J=2, relax=True, containment='simplex')
 print(bd.ordered())
 print(bd.median())

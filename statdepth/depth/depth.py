@@ -7,7 +7,7 @@ from .abstract import AbstractDepth
 
 # Private class that wraps the band depth calculation methods with some extra attributes as well
 class _FunctionalDepthSeries(AbstractDepth, pd.Series):
-
+    
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(data=depths)
 
@@ -20,10 +20,6 @@ class _FunctionalDepthSeries(AbstractDepth, pd.Series):
         if self._ordered_depths is None:
             self._ordered_depths =  self._depths.sort_values(ascending=ascending)
         return self._ordered_depths
-
-    def sorted(self, ascending=False) -> pd.Series:
-        '''Alias for ordered()'''
-        return self.ordered(ascending=ascending)
 
     def deepest(self, n=1) -> pd.Series:
         '''Return the n deepest curves. Equivalently, return the n largest items in the depths Series'''
@@ -43,10 +39,6 @@ class _FunctionalDepthSeries(AbstractDepth, pd.Series):
             return pd.Series(index=[list(self._ordered_depths.index)[-1]], data=[self._ordered_depths.values[-1]])
         else:
             return pd.Series(index=self._ordered_depths.index[-n: ], data=self._ordered_depths.values[-n: ])
-
-    # def median(self) -> pd.Series:
-    #     '''Return the deepest curve, which is defined as the median curve'''
-    #     return self.deepest(n=1)
     
     def plot_deepest(self, n=1) -> None:
         '''Plots all the data in blue and marks the n deepest in red'''
@@ -71,9 +63,6 @@ class _FunctionalDepthDataFrame(AbstractDepth, pd.DataFrame):
     def ordered(self, ascending=False):
         pass
 
-    def sorted(self, ascending=False):
-        return self.ordered(ascending=ascending)
-
     def deepest(self, n=1):
         pass
 
@@ -91,9 +80,6 @@ class _PointwiseDepth(AbstractDepth, pd.Series):
 
     def ordered(self, ascending=False):
         pass
-
-    def sorted(self, ascending=False):
-        return self.ordered(ascending=ascending)
 
     def deepest(self, n=1):
         pass
@@ -133,7 +119,7 @@ containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries
     if isinstance(data, dict):
         keys.extend(data.keys())
         data = data.values()
-    
+
     if K is not None:
         depth = _samplebanddepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
     else:

@@ -122,15 +122,23 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
     float: If relax=False, then 0 if the function is not contained in the curve, 1 if it is. If relax=True, then we consider the proportion of time the curve is in the band, so we will return a number between 0 and 1. 
     '''
 
-    depth = 0
+    n = len(data)
+    l, d = data[0].shape
+    
+    # Iterate over our subsequences of functions to form simplex with d+1 vertices
+    containment = 0
 
-    for x in data[0].index:
-        depth += _is_in_simplex(simplex_points=[curve.loc[x, :] for curve in data], point=curve.loc[x, :])
-
-    return depth / len(data) if relax else depth // len(data)
+    # For each time index, check containment 
+    for idx in curve.index:
+        containment += _is_in_simplex(simplex_points=np.array([df.loc[idx, :] for df in data]), 
+                                point=np.array(curve.loc[idx, :]))
+    
+    # If relaxation, return proportion of containment, else return integer divion so that we 
+    # only get 1 if all rows are contained
+    return containment / l if relax else containment // l
 
 def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
-    '''Checks if the point is in the convex hull formed by simplex_points
+    '''Checks if the d dimensional point is in the simplex formed by d + 1 simplex_points (geometric degeneracy allowed)
     
     Parameters:
     ----------

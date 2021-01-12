@@ -16,17 +16,6 @@ from ._containment import _simplex_containment
 from ._containment import _select_containment
 from ._containment import _is_valid_containment
 
-
-# def BandDepth(data: List[pd.DataFrame], K=None, J=2, containment='r2', relax=False, deep_check=False) -> Union[_BandDepthSeries, _BandDepthDataFrame]:
-#     if K is not None:
-#         data = _samplebanddepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
-#     else:
-#         data = _banddepth(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
-
-#     if isinstance(data, pd.DataFrame):
-#         return _BandDepthDataFrame(data)
-#     else:
-
 def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the band depth for a set of functional curves.
@@ -74,11 +63,34 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
         # Return a series indexed by our samples
         return pd.Series(index=df.columns, data=band_depths)
     else: 
-        # TODO: Multivariate case
-        pass
+        if containment == 'simplex':
+            print('GOT HERE')
+            depths = []
+            f = [i for i in range(len(data))]
+            for cdf in data:
+                cdata = [df for df in data if df is not cdf]
+                depths.append(_simplex_depth(data=cdata, curve=cdf, J=J, relax=relax))
+                
+            return pd.Series(index=f, data=depths)
     
     return None
 
+def _simplex_depth(data: list, curve: pd.DataFrame, J=2, relax=False):
+    l, d = data[0].shape
+    n = len(data)
+    depth = 0
+    
+    for j in range(2, J + 1):
+        S_nj = 0
+        subseq = _subsequences([i for i in range(n)], d + 1)
+        
+        for seq in subseq:
+            cdata = [data[i] for i in seq]
+            S_nj += _simplex_containment(data=data, curve=curve, relax=relax)
+        
+        depth += S_nj / binom(n, d + 1)
+
+    return depth
 
 def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
@@ -267,9 +279,8 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
     # get curve series 
     curvedata = data.loc[:, curve]
 
-    # Drop the curve we're calculating band depth for if it is contained in our DataFrame
-    if curve in data.columns:
-        data = data.drop(curve, axis=1)
+    # Drop the curve we're calculating band depth for 
+    data = data.drop(curve, axis=1)
 
     # Compute band depth
     for j in range(2, J + 1):

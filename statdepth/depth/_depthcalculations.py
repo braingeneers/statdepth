@@ -10,11 +10,7 @@ import pandas as pd
 from numba import jit
 from scipy.special import comb, binom
 
-from ._containment import _r2_containment
-from ._containment import _r2_enum_containment
-from ._containment import _simplex_containment
-from ._containment import _select_containment
-from ._containment import _is_valid_containment
+from ._containment import _r2_containment, _r2_enum_containment, _simplex_containment, _select_containment, _is_valid_containment, _is_in_simplex
 
 def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
@@ -64,7 +60,6 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
         return pd.Series(index=df.columns, data=band_depths)
     else: 
         if containment == 'simplex':
-            print('GOT HERE')
             depths = []
             f = [i for i in range(len(data))]
             for cdf in data:
@@ -74,23 +69,6 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
             return pd.Series(index=f, data=depths)
     
     return None
-
-def _simplex_depth(data: list, curve: pd.DataFrame, J=2, relax=False):
-    l, d = data[0].shape
-    n = len(data)
-    depth = 0
-    
-    for j in range(2, J + 1):
-        S_nj = 0
-        subseq = _subsequences([i for i in range(n)], d + 1)
-        
-        for seq in subseq:
-            cdata = [data[i] for i in seq]
-            S_nj += _simplex_containment(data=data, curve=curve, relax=relax)
-        
-        depth += S_nj / binom(n, d + 1)
-
-    return depth
 
 def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
@@ -231,7 +209,6 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
         if not all([all(indices[0] == i) for i in indices]):
             raise ValueError('DataFrames indices must be the same')
         
-
 def _subsequences(s: list, l: int) -> list:
     '''Returns a list of all possible subsequences of length l from the given input list
 
@@ -279,7 +256,7 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
     # get curve series 
     curvedata = data.loc[:, curve]
 
-    # Drop the curve we're calculating band depth for 
+    # Drop the curve we're calculating band depth for
     data = data.drop(curve, axis=1)
 
     # Compute band depth
@@ -289,7 +266,7 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
 
         # Get a list of all possible subsequences of samples (cols)
         subseq = _subsequences(list(data.columns), j)
-
+    
         # Iterate over all subsequences
         for sequence in subseq:
             # Grab data for the current subsequence
@@ -301,3 +278,44 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
         band_depth += S_nj / binom(n, j)
     
     return band_depth
+
+
+
+def _simplex_depth(data: list, curve: pd.DataFrame, J=2, relax=False):
+    l, d = data[0].shape
+    n = len(data)
+    depth = 0
+    
+    for j in range(2, J + 1):
+        S_nj = 0
+        subseq = _subsequences([i for i in range(n)], d + 1)
+        
+        for seq in subseq:
+            cdata = [data[i] for i in seq]
+            S_nj += _simplex_containment(data=data, curve=curve, relax=relax)
+        
+        depth += S_nj / binom(n, d + 1)
+
+    return depth
+
+def _pointwisedepth(data: pd.DataFrame, J=2, containment='simplex'):
+    
+    n, d = data.shape
+    depths = []
+    for time in data.index:
+        S_nj = 0
+        
+        point = data.loc[time, :]
+        
+        subseq = _subsequences(list(data.drop(time, axis=0).index), d + 1)
+
+        for seq in subseq:
+            S_nj += _is_in_simplex(simplex_points=
+                    np.array(data.loc[seq, :]), point=np.array(point))
+            
+        depths.append(S_nj / binom(n, d + 1))
+        
+    return pd.Series(index=data.index, data=depths)
+
+def _samplepointwisedepth(data: pd.DataFrame, K=2, J=2, containment='simplex'):
+    pass

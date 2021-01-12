@@ -2,12 +2,12 @@ import pandas as pd
 from typing import Callable, List, Union, Dict
 import plotly.graph_objects as go
 
-from ._depthcalculations import _banddepth, _samplebanddepth
+from ._depthcalculations import _banddepth, _samplebanddepth, _pointwisedepth, _samplepointwisedepth
 from .abstract import AbstractDepth
 
 # Private class that wraps the band depth calculation methods with some extra attributes as well
 class _FunctionalDepthSeries(AbstractDepth, pd.Series):
-    
+
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(data=depths)
 
@@ -72,9 +72,9 @@ class _FunctionalDepthDataFrame(AbstractDepth, pd.DataFrame):
 class _PointwiseDepth(AbstractDepth, pd.Series):
     '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''
 
-    def __init__(self, df: pd.DataFrame, depths: pd.Series):
+    def __init__(self, data: pd.DataFrame, depths: pd.Series):
 
-        self._orig_data = df
+        self._orig_data = data
         self._depths = depths
         self._ordered_depths = None
 
@@ -87,33 +87,16 @@ class _PointwiseDepth(AbstractDepth, pd.Series):
     def outlying(self, n=1):
         pass
 
+def PointwiseDepth(data: pd.DataFrame, K=None, J=2, containment='simplex', relax=False, deep_check=False) -> _PointwiseDepth:
+    if K is not None:
+        depth = _samplepointwisedepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=False)
+    else:
+        depth = _pointwisedepth(data=data, J=J, containment=containment)
+    
+    return _PointwiseDepth(data=data, depths=depth)
 
 def FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 
-containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthDataFrame]:
-    '''
-    Wrapper function that selects a private class depending on the dimensionality of the data passed. 
-
-    Parameters:
-    ----------
-    data : list of DataFrames, or Dict where the key is a name, and the value is a DataFrame
-        Functions to calculate band depth from
-    K: int (default=None)
-        If K is not none, then we compute the sample band depth with K blocks.
-    J: int (default=2)
-        J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
-    containment: Callable or string (default='r2')
-        Defines what containment means for the dataset. For functions from R-->R, we use the standard ordering on R. For higher dimensional spaces, we implement a simplex method. 
-        A full list can be found in the README, as well as instructions on passing a custom definition for containment.  
-    relax: bool
-        If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
-    deep_check: bool (default=False)
-        If True, perform a more extensive error checking routine. Optional because it can be computationally expensive for large datasets. 
-
-    Returns:
-    ----------
-    _FunctionalDepthSeries, _FunctionalDepthDataFrame: Return an instance of the appropriate depth class for the given data.
-    '''
-    
+containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthDataFrame]:    
     keys = []
     
     if isinstance(data, dict):

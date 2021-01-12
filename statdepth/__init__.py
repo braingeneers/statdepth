@@ -1,1 +1,1 @@
-from .depth.depth import FunctionalDepth
+from .depth.depth import FunctionalDepth, PointwiseDepth

@@ -62,6 +62,8 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
         if containment == 'simplex':
             depths = []
             f = [i for i in range(len(data))]
+
+            # Compute band depth for each function (DataFrame)
             for cdf in data:
                 cdata = [df for df in data if df is not cdf]
                 depths.append(_simplex_depth(data=cdata, curve=cdf, J=J, relax=relax))
@@ -266,7 +268,7 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
 
         # Get a list of all possible subsequences of samples (cols)
         subseq = _subsequences(list(data.columns), j)
-    
+
         # Iterate over all subsequences
         for sequence in subseq:
             # Grab data for the current subsequence
@@ -278,8 +280,6 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
         band_depth += S_nj / binom(n, j)
     
     return band_depth
-
-
 
 def _simplex_depth(data: list, curve: pd.DataFrame, J=2, relax=False):
     l, d = data[0].shape

@@ -60,7 +60,7 @@ def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:
     mins = data.min(axis=1)
     maxs = data.max(axis=1)
     
-    # Generate intervals in R
+    # Generate intervals in R over each time index
     intervals = [[i, j] for i, j in zip(mins, maxs)]
     
     # Check if each value in the curve is contained within the band 
@@ -93,7 +93,8 @@ def _r2_enum_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
     # TODO: This entire thing. I have no idea what im doing lol. All wrong so far
 
     depth = pd.DataFrame()
-
+    l, p = data.shape 
+    
     # Choose any DataFrame since assumption is that all columns are the same -- dont need to check for this, user can deal with error.
     for col in data[0].columns:
         t = pd.DataFrame()
@@ -153,7 +154,13 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     bool: True if point is contained in the simplex, False otherwise
     '''
 
-    # Checks if the point can be expressed as a convex combination of the set of points of whom a subset defines a convex hull
+    # Check if the vector x (point) can be written as a 
+    # convex combination of x_1,...,x_n (simplex_points), 
+    # x = a_1x_1+...+a_nx_n such that a_1+...+a_n = 1.
+
+    # If this is possible, then the point is in the convex hull formed by those points.
+    # In this case, the convex hull is formed with d+1 points so it is a simplex. 
+
     n_points = len(simplex_points)
     n_dim = len(point)
     

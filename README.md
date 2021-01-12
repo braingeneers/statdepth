@@ -44,9 +44,9 @@ x_4    1    2    1  7.0   11    9
 Each x_i is a timepoint, each column is a function f_i. In this case, we compute band depth using 
 
 ```Python 
->>> from statdepth.depth import banddepth
+>>> from statdepth import FunctionalDepth
 
->>> banddepth([df], J=2).ordered()
+>>> FunctionalDepth([df], J=2, relax=False).ordered()
 f_3    0.400000
 f_5    0.266667
 f_2    0.200000
@@ -60,32 +60,44 @@ If a single item is passed in the list, *it is assumed we are in the univariate 
 
 #### iii. Multivariate functions
 
-In the case of **multivariate functions**, each DataFrame in a list should be a function where the *columns* are the *features* and the rows are the *time indices*. For example, if we had the three multivariate observations given by
+In the case of **multivariate functions**, each DataFrame in a list should be a function where the *columns* are the *features* and the rows are the *time indices*. For example, if we had multivariate observations given by
 ```Python
 >>> df1
-       size  weight  co_amount
-00:00   1.0       2          3
-00:50   4.0       5          6
-01:25   0.5       1          2
->>> df2
-       size  weight  co_amount
-00:00     3       2          1
-00:50     5       4          3
-01:25     1       1          0
->>> df3
-       size  weight  co_amount
-00:00   1.0       2          3
-00:50   9.0      10          1
-01:25   0.5       1          2
+       size  co_amount  weight
+00:00     0          2       2
+00:30     1          0       3
+01:00     1          3       2
+01:30     3          0       3
+02:00     3          3       1
+02:30     1          1       0
 
+>>> df2
+       size  co_amount  weight
+00:00     3          2       3
+00:30     0          3       2
+01:00     1          3       2
+01:30     2          2       0
+02:00     0          1       2
+02:30     1          3       3
+
+>>> df3
+...
 ```
 
 Then to compute band depth, we would use 
 
 ```Python
-from statdepth.depth import banddepth
+>>> from statdepth import FunctionalDepth
 
-banddepth([df1, df2, df3], containment='r2_enum', J=2)
+>>> FunctionalDepth([df1, df2, df3], containment='simplex', J=2, relax=True)
+2    0.333333
+1    0.333333
+5    0.166667
+0    0.166667
+4    0.000000
+3    0.000000
+dtype: float64
+
 ```
 
 ## 4. Containment

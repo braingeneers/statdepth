@@ -310,6 +310,7 @@ def _simplex_depth(data: List[pd.DataFrame], curve: pd.DataFrame, J=2, relax=Fal
     n = len(data)
     depth = 0
     
+    # TODO: Wait, do I need J here??
     for j in range(2, J + 1):
         S_nj = 0
         subseq = _subsequences([i for i in range(n)], d + 1)
@@ -322,7 +323,7 @@ def _simplex_depth(data: List[pd.DataFrame], curve: pd.DataFrame, J=2, relax=Fal
 
     return depth
 
-def _pointwisedepth(data: pd.DataFrame, points: pd.Index=None, J=2, containment='simplex'):
+def _pointwisedepth(data: pd.DataFrame, points: pd.Index=None, containment='simplex'):
     """Compute pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
     only compute depth for the given points (should be a subset of data.index)"""
     n, d = data.shape
@@ -345,9 +346,30 @@ def _pointwisedepth(data: pd.DataFrame, points: pd.Index=None, J=2, containment=
                         np.array(data.loc[seq, :]), point=np.array(point))
                 
             depths.append(S_nj / binom(n, d + 1))
-        
+
     return pd.Series(index=to_compute, data=depths)
 
-# TODO: This function. Just split data.index into K blocks, compute w.r.t those, average
-def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, J=2, containment='simplex'):
-    pass
+def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, containment='simplex'):
+    n, d = data.shape 
+    to_compute = data.index 
+    depths = []
+    if points is not None:
+        to_compute = points 
+    
+    # K blocks of points (indices)
+    ss = n // K 
+
+    for time in to_compute:
+        cd = []
+        for _ in range(ss):
+            sdata = data.sample(n=ss, axis=0)
+            
+            # If our current datapoint isnt in the sampled data, just append it since we need to sample it 
+            # for _is_in_simplex()
+            if not time in sdata.index:
+                sdata = sdata.append(data.loc[time, :])
+                
+            cd.append(_pointwisedepth(data=sdata, points=[time], J=J, containment=containment))
+        depths.append(np.mean(cd))
+        
+    return pd.Series(index=to_compute, data=depths)

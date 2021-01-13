@@ -6,18 +6,10 @@ from statdepth import FunctionalDepth, PointwiseDepth
 
 cols = ['size', 'co_amount', 'weight']
 index = ['00:00', '00:30', '01:00', '01:30', '02:00', '02:30']
-df1 = pd.DataFrame(np.random.randint(0,2,size=(30, 30)), )
-# df2 = pd.DataFrame(np.random.randint(0,2,size=(6, 3)), columns=cols, index=index)
-# df3 = pd.DataFrame(np.random.randint(0,2,size=(6, 3)), columns=cols, index=index)
-# df4 = pd.DataFrame(np.random.randint(0,2,size=(6, 3)), columns=cols, index=index)
-# df5 = pd.DataFrame(np.random.randint(0,2,size=(6, 3)), columns=cols, index=index)
-# df6 = pd.DataFrame(np.random.randint(0,2,size=(6, 3)), columns=cols, index=index)
-# df7 = pd.DataFrame(np.random.randint(0,2,size=(6, 3)), columns=cols, index=index)
-# df8 = pd.DataFrame(np.random.randint(0,2,size=(6, 3)), columns=cols, index=index)
-# df9 = pd.DataFrame(np.random.randint(0,2,size=(6, 3)), columns=cols, index=index)
+df1 = pd.DataFrame(np.random.randint(0,6,size=(30, 2)), )
 
 # data = [df1, df2, df3, df4, df5, df6, df7, df8, df9]
-bd = FunctionalDepth([df1], J=2, K=3, relax=False, containment='simplex')
+bd = PointwiseDepth(data=df1, K=5)
 
 print(bd.ordered())
 

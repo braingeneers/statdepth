@@ -248,7 +248,7 @@ def _subsequences(s: list, l: int) -> list:
     list: List of subsequences
     """
 
-    return sorted(set(combinations(s, l)))
+    return list(set(combinations(s, l)))
 
 
 def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bool, containment: Callable, J=2) -> float:
@@ -329,15 +329,16 @@ def _simplex_depth(data: List[pd.DataFrame], curve: pd.DataFrame, J=2, relax=Fal
     depth = 0
     
     # TODO: Wait, do I need J here??
-    for j in range(2, J + 1):
-        S_nj = 0
-        subseq = _subsequences([i for i in range(n)], d + 1)
-        
-        for seq in subseq:
-            cdata = [data[i] for i in seq]
-            S_nj += _simplex_containment(data=data, curve=curve, relax=relax)
-        
-        depth += S_nj / binom(n, d + 1)
+    # for j in range(2, J + 1):
+    S_nj = 0
+    subseq = _subsequences([i for i in range(n)], d + 1)
+    
+    for seq in subseq:
+        cdata = [data[i] for i in seq]
+        S_nj += _simplex_containment(data=data, curve=curve, relax=relax)
+    
+    # Probably wrong too... 
+    depth += S_nj / binom(n, d + 1)
 
     return depth
 
@@ -429,7 +430,7 @@ def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, contai
             if not time in sdata.index:
                 sdata = sdata.append(data.loc[time, :])
                 
-            cd.append(_pointwisedepth(data=sdata, points=[time], J=J, containment=containment))
+            cd.append(_pointwisedepth(data=sdata, points=[time], containment=containment))
         depths.append(np.mean(cd))
         
     return pd.Series(index=to_compute, data=depths)

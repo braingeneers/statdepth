@@ -66,10 +66,6 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(df=df, depths=depths)
 
-        self._orig_data = df
-        self._depths = depths
-        self._ordered_depths = None
-
     def _plot(self, deep_or_outlying: pd.Series) -> None:
         cols = self._orig_data.columns
         x = self._orig_data.index
@@ -92,15 +88,48 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         '''Plots all the data in blue and marks the n most outlying curves in red'''
         self._plot(deep_or_outlying=self.outlying(n=n))
 
+    
+
 class _PointwiseDepth(_FunctionalDepthSeries):
     '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''
 
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(df=df, depths=depths)
 
-        self._orig_data = df
-        self._depths = depths
-        self._ordered_depths = None
+    def plot_depths(self, invert_colors=False, marker=None) -> None:
+        d = self._depths
+        cols = self._orig_data.columns
+        n = len(self._orig_data.columns)
+
+        if invert_colors:
+            d = 1 - d
+
+        if marker is None:
+            marker = dict(color=d, colorscale='viridis', size=10)
+
+        if n > 3:
+            self._plot_parallel_axis()
+        elif n == 3:
+            fig = go.Figure(data=[
+                go.Scatter3d(x=self._orig_data.loc[:, cols[0]], y=self._orig_data.loc[:, cols[1]], z=self._orig_data.loc[:, cols[2]], 
+                mode='markers', 
+                marker=marker)
+            ])
+
+            fig.update_layout(showlegend=False)
+            fig.show()
+
+        elif n == 2:
+            fig = go.Figure(data=[
+                go.Scatter(x=self._orig_data.loc[:, cols[0]], y=self._orig_data.loc[:, cols[1]], 
+                mode='markers', 
+                marker=marker)
+            ])
+
+            fig.update_layout(showlegend=False)
+            fig.show()
+        else: #n==1
+            pass
 
     def _plot_parallel_axis(self) -> None:
         pass 
@@ -114,10 +143,11 @@ class _PointwiseDepth(_FunctionalDepthSeries):
             self._plot_parallel_axis()
         elif n == 3:
             fig = go.Figure(data=[
-                go.Scatter3d(x=self._orig_data[cols[0]], y=self._orig_data[cols[1]], z=self._orig_data[cols[2]], mode='markers', marker_color='blue', name=''),
-                go.Scatter3d(x=select[cols[0]], y=select[cols[1]], z=select[cols[2]], mode='markers', 
-                        marker_color='red', name='')
-
+                go.Scatter3d(x=self._orig_data[cols[0]], y=self._orig_data[cols[1]], z=self._orig_data[cols[2]], 
+                    mode='markers', marker_color='blue', name=''),
+                go.Scatter3d(x=select[cols[0]], y=select[cols[1]], z=select[cols[2]], 
+                    mode='markers', 
+                    marker_color='red', name='')
             ])
             
             fig.update_layout(showlegend=False)

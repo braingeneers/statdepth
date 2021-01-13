@@ -139,7 +139,7 @@ containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries
     # If there is not at least d + 2 functions for our d dimensional data, then for each function
     # We won't have d + 1 vertices to construct a simplex, which means every simplex will be at least one dimensional degenerate
     # Therefore we say depth is not well defined and error
-    if isinstance(data, list) and len(data) < data[0].shape + 2:
+    if isinstance(data, list) and len(data) < data[0].shape[1] + 2:
         raise DepthDegeneracy(f'Error: Need at least {len(data)} functions to form non-degenerate simplices in {data[0].shape + 2} dimensional space. Only have {len(data)}')
 
     if K is not None:

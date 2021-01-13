@@ -10,6 +10,12 @@ from numba import jit
 from scipy.special import comb, binom
 from scipy.optimize import linprog
 
+# This is not a solution I like, but I don't want to spam the user with
+# warnings when simplex containment is used, because linprog() is very whiny
+import warnings 
+warnings.filterwarnings('ignore')
+
+
 def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, pd.DataFrame], bool], float]) -> None: 
     '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function.
     
@@ -155,8 +161,8 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     '''
 
     # Check if the vector x (point) can be written as a 
-    # convex combination of x_1,...,x_n (simplex_points), 
-    # x = a_1x_1+...+a_nx_n such that a_1+...+a_n = 1.
+    # convex combination of x_1,...,x_n (simplex_points), i.e.
+    # x = a_1x_1+...+a_nx_n such that a_i >=0, a_1+...+a_n = 1.
 
     # If this is possible, then the point is in the convex hull formed by those points.
     # In this case, the convex hull is formed with d+1 points so it is a simplex. 

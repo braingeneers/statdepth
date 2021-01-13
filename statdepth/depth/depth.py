@@ -5,6 +5,10 @@ import plotly.graph_objects as go
 from ._depthcalculations import _banddepth, _samplebanddepth, _pointwisedepth, _samplepointwisedepth
 from .abstract import AbstractDepth
 
+# Custom error class for anytime there is going to be some degeneracy with depth calculation (i.e. k degenerate simplices)
+class DepthDegeneracy(Exception):
+    pass
+
 # Private class that wraps the band depth calculation methods with some extra attributes as well
 class _FunctionalDepthSeries(AbstractDepth, pd.Series):
 
@@ -40,51 +44,85 @@ class _FunctionalDepthSeries(AbstractDepth, pd.Series):
         else:
             return pd.Series(index=self._ordered_depths.index[-n: ], data=self._ordered_depths.values[-n: ])
     
-    def plot_deepest(self, n=1) -> None:
-        '''Plots all the data in blue and marks the n deepest in red'''
-        s = self.deepest(n=n)
-        cols = self._orig_data.columns
-        x= self._orig_data.index
 
-        data=[go.Scatter(x=x, y=self._orig_data[y], mode='lines+markers', marker_color='Blue') for y in cols]
-        data.extend([go.Scatter(x=x, y=self._orig_data[y], mode='lines+markers', marker_color='Red') for y in s.index])
+class _FunctionalDepthMultivariateDataFrame(AbstractDepth, pd.DataFrame):
+    # Don't copy over all the functions. Numpy arrays might be large
+    # and this will add extra space complexity
+    # Also, visualization for multivariate functions isn't extensive enough to justify 
+    # storing all of the data
+    def __init__(self, names: List[str], depths: pd.DataFrame):
+        super().__init__(depths)
+        self._names = names
+        self._depths = depths
+
+    # Not inheritable from _FunctionalDepthSeries because depths is a DataFrame
+    def ordered(self, ascending=False):
+        pass
+
+    def deepest(self, n=1):
+        pass
+
+    def outlying(self, n=1):
+        pass
+
+class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
+    def __init__(self, df: pd.DataFrame, depths: pd.Series):
+        super().__init__(df=df, depths=depths)
+
+        self._orig_data = df
+        self._depths = depths
+        self._ordered_depths = None
+
+    def _plot(self, deep_or_outlying: pd.Series) -> None:
+        cols = self._orig_data.columns
+        x = self._orig_data.index
+
+        # We use deep_or_outlying.index to get the columns because 
+        # deep_or_outlying is a Series indexed by the original columns
+        data=[go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines+markers', marker_color='Blue') for y in cols]
+        data.extend([go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines+markers', marker_color='Red') for y in deep_or_outlying.index])
 
         fig = go.Figure(data=data)
         fig.update_layout(showlegend=False)
 
         fig.show()
 
-class _FunctionalDepthDataFrame(AbstractDepth, pd.DataFrame):
-    def __init__(self, names: List[str], depths: pd.DataFrame):
-        super().__init__(depths)
-        self._names = names
-        self._depths = depths
+    def plot_deepest(self, n=1) -> None:
+        '''Plots all the data in blue and marks the n deepest in red'''
+        self._plot(deep_or_outlying=self.deepest(n=n))
 
-    def ordered(self, ascending=False):
-        pass
+    def plot_outlying(self, n=1) -> None:
+        '''Plots all the data in blue and marks the n most outlying curves in red'''
+        self._plot(deep_or_outlying=self.outlying(n=n))
 
-    def deepest(self, n=1):
-        pass
-
-    def outlying(self, n=1):
-        pass
-
-class _PointwiseDepth(AbstractDepth, pd.Series):
+class _PointwiseDepth(_FunctionalDepthSeries):
     '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''
 
-    def __init__(self, data: pd.DataFrame, depths: pd.Series):
+    def __init__(self, df: pd.DataFrame, depths: pd.Series):
+        super().__init__(df=df, depths=depths)
 
-        self._orig_data = data
+        self._orig_data = df
         self._depths = depths
         self._ordered_depths = None
 
-    def ordered(self, ascending=False):
+    def _plot_parallel_axis(self, df: pd.DataFrame) -> None:
+        pass 
+
+    def _plot(self, deep_or_outlying: pd.Series) -> None:
+        n = self._orig_data.columns
+        if n > 3:
+            self._plot_parallel_axis(df=self._orig_data)
+        elif n == 3:
+            pass
+        elif n == 2: 
+            pass
+        else: # n = 1
+            pass
+
+    def plot_deepest(self, n=1) -> None:
         pass
 
-    def deepest(self, n=1):
-        pass
-
-    def outlying(self, n=1):
+    def plot_outlying(self, n=1) -> None:
         pass
 
 def PointwiseDepth(data: pd.DataFrame, K=None, J=2, containment='simplex', relax=False, deep_check=False) -> _PointwiseDepth:
@@ -96,12 +134,13 @@ def PointwiseDepth(data: pd.DataFrame, K=None, J=2, containment='simplex', relax
     return _PointwiseDepth(data=data, depths=depth)
 
 def FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 
-containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthDataFrame]:    
-    keys = []
-    
-    if isinstance(data, dict):
-        keys.extend(data.keys())
-        data = data.values()
+containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthMultivariateDataFrame]:   
+
+    # If there is not at least d + 2 functions for our d dimensional data, then for each function
+    # We won't have d + 1 vertices to construct a simplex, which means every simplex will be at least one dimensional degenerate
+    # Therefore we say depth is not well defined and error
+    if isinstance(data, list) and len(data) < data[0].shape + 2:
+        raise DepthDegeneracy(f'Error: Need at least {len(data)} functions to form non-degenerate simplices in {data[0].shape + 2} dimensional space. Only have {len(data)}')
 
     if K is not None:
         depth = _samplebanddepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
@@ -109,9 +148,6 @@ containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries
         depth = _banddepth(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
 
     if isinstance(depth, pd.DataFrame):
-        return _FunctionalDepthDataFrame(names=keys, depths=depth)
+        return _FunctionalDepthMultivariateDataFrame(names=keys, depths=depth)
     else:
-        return _FunctionalDepthSeries(df=data[0], depths=depth)
-
-# def PointWiseDepth(data: pd.DataFrame, K=None, J=2, containment='r2', relax=False, deep_check=False) -> _PointwiseDepth:
-#     return _PointwiseDepth(None, None)
+        return _FunctionalDepthUnivariate(df=data[0], depths=depth)

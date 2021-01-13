@@ -12,6 +12,10 @@ from scipy.special import comb, binom
 
 from ._containment import _r2_containment, _r2_enum_containment, _simplex_containment, _select_containment, _is_valid_containment, _is_in_simplex
 
+# Custom error class for anytime there is going to be some degeneracy with depth calculation (i.e. k degenerate simplices)
+class DepthDegeneracy(Exception):
+    pass
+
 def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the band depth for a set of functional curves.
@@ -49,6 +53,13 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
 
     # If only one item in the list, it is the real-valued case (by assumption)
     if len(data) == 1:
+
+        # In the case of simplex containment in R2 for f: R --> R, the simplices of 2 points degenerate to 
+        # intervals, which is equivalent to the standard containment on R2
+        if containment == 'simplex':
+            warnings.warn('Simplex containment for real-valued functions is degenerate, and equivalent to interval containment. Falling back to interval containment.')
+            cdef = _r2_containment
+
         band_depths = []
         df = data[0]
 
@@ -58,9 +69,11 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
 
         # Return a series indexed by our samples
         return pd.Series(index=df.columns, data=band_depths)
-    else: 
+    else:
         if containment == 'simplex':
             depths = []
+
+            # Get 'columns' of functions, which are just their indices
             f = [i for i in range(len(data))]
 
             # Compute band depth for each function (DataFrame)
@@ -197,6 +210,12 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
     if len(data) > 1 and containment == 'r2':
         raise ValueError('containment argument \'r2\' is invalid for multivariate data. Use one of [\'r2_enum\', \'simplex \'] or a passed containment method. ')
 
+    # If there is not at least d + 2 functions for our d dimensional data, then for each function
+    # We won't have d + 1 vertices to construct a simplex, which means every simplex will be at least one dimensional degenerate
+    # Therefore we say depth is not well defined and error
+    if isinstance(data, list) and len(data) < data[0].shape[1] + 2 and containment == _simplex_containment:
+        raise DepthDegeneracy(f'Error: Need at least {len(data)} functions to form non-degenerate simplices in {data[0].shape + 2} dimensional space. Only have {len(data)}.')
+
     if deep_check:
         # Check dtypes of all columns over all DataFrames. 
         # Optional because this might be computationally expensive for very large datasets. 
@@ -212,7 +231,8 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
             raise ValueError('DataFrames indices must be the same')
         
 def _subsequences(s: list, l: int) -> list:
-    '''Returns a list of all possible subsequences of length l from the given input list
+    '''
+    Returns a list of all possible subsequences of length l from the given input list
 
     Parameters:
     ----------
@@ -230,7 +250,8 @@ def _subsequences(s: list, l: int) -> list:
 
 
 def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bool, containment: Callable, J=2) -> float:
-    """Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
+    """
+    Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     
     Parameters:
     ----------
@@ -281,7 +302,8 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
     
     return band_depth
 
-def _simplex_depth(data: list, curve: pd.DataFrame, J=2, relax=False):
+def _simplex_depth(data: List[pd.DataFrame], curve: pd.DataFrame, J=2, relax=False):
+    """Calculates simplex depth of the given curve with respect to data"""
     l, d = data[0].shape
     n = len(data)
     depth = 0
@@ -298,24 +320,32 @@ def _simplex_depth(data: list, curve: pd.DataFrame, J=2, relax=False):
 
     return depth
 
-def _pointwisedepth(data: pd.DataFrame, J=2, containment='simplex'):
-    
+def _pointwisedepth(data: pd.DataFrame, points: pd.Index=None, J=2, containment='simplex'):
+    """Compute pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
+    only compute depth for the given points (should be a subset of data.index)"""
     n, d = data.shape
     depths = []
-    for time in data.index:
-        S_nj = 0
-        
-        point = data.loc[time, :]
-        
-        subseq = _subsequences(list(data.drop(time, axis=0).index), d + 1)
+    to_compute = data.index
 
-        for seq in subseq:
-            S_nj += _is_in_simplex(simplex_points=
-                    np.array(data.loc[seq, :]), point=np.array(point))
+    if points is not None:
+        to_compute = points
+
+    if containment == 'simplex':
+        for time in to_compute:
+            S_nj = 0
             
-        depths.append(S_nj / binom(n, d + 1))
-        
-    return pd.Series(index=data.index, data=depths)
+            point = data.loc[time, :]
+            
+            subseq = _subsequences(list(data.drop(time, axis=0).index), d + 1)
 
-def _samplepointwisedepth(data: pd.DataFrame, K=2, J=2, containment='simplex'):
+            for seq in subseq:
+                S_nj += _is_in_simplex(simplex_points=
+                        np.array(data.loc[seq, :]), point=np.array(point))
+                
+            depths.append(S_nj / binom(n, d + 1))
+        
+    return pd.Series(index=to_compute, data=depths)
+
+# TODO: This function. Just split data.index into K blocks, compute w.r.t those, average
+def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, J=2, containment='simplex'):
     pass

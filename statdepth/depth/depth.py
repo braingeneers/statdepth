@@ -2,12 +2,8 @@ import pandas as pd
 from typing import Callable, List, Union, Dict
 import plotly.graph_objects as go
 
-from ._depthcalculations import _banddepth, _samplebanddepth, _pointwisedepth, _samplepointwisedepth
+from ._depthcalculations import _banddepth, _samplebanddepth, _pointwisedepth, _samplepointwisedepth, DepthDegeneracy
 from .abstract import AbstractDepth
-
-# Custom error class for anytime there is going to be some degeneracy with depth calculation (i.e. k degenerate simplices)
-class DepthDegeneracy(Exception):
-    pass
 
 # Private class that wraps the band depth calculation methods with some extra attributes as well
 class _FunctionalDepthSeries(AbstractDepth, pd.Series):
@@ -50,9 +46,8 @@ class _FunctionalDepthMultivariateDataFrame(AbstractDepth, pd.DataFrame):
     # and this will add extra space complexity
     # Also, visualization for multivariate functions isn't extensive enough to justify 
     # storing all of the data
-    def __init__(self, names: List[str], depths: pd.DataFrame):
+    def __init__(self, depths: pd.DataFrame):
         super().__init__(depths)
-        self._names = names
         self._depths = depths
 
     # Not inheritable from _FunctionalDepthSeries because depths is a DataFrame
@@ -65,6 +60,8 @@ class _FunctionalDepthMultivariateDataFrame(AbstractDepth, pd.DataFrame):
     def outlying(self, n=1):
         pass
 
+# Just extends the FunctionalDepthSeries class with extra plotting capabilities,
+# Since in this case our data are real-valued functions
 class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(df=df, depths=depths)
@@ -105,49 +102,68 @@ class _PointwiseDepth(_FunctionalDepthSeries):
         self._depths = depths
         self._ordered_depths = None
 
-    def _plot_parallel_axis(self, df: pd.DataFrame) -> None:
+    def _plot_parallel_axis(self) -> None:
         pass 
 
     def _plot(self, deep_or_outlying: pd.Series) -> None:
-        n = self._orig_data.columns
+        n = len(self._orig_data.columns)
+        cols = self._orig_data.columns
+        select = self._orig_data.loc[deep_or_outlying.index, :]
+        
         if n > 3:
-            self._plot_parallel_axis(df=self._orig_data)
+            self._plot_parallel_axis()
         elif n == 3:
-            pass
+            fig = go.Figure(data=[
+                go.Scatter3d(x=self._orig_data[cols[0]], y=self._orig_data[cols[1]], z=self._orig_data[cols[2]], mode='markers', marker_color='blue', name=''),
+                go.Scatter3d(x=select[cols[0]], y=select[cols[1]], z=select[cols[2]], mode='markers', 
+                        marker_color='red', name='')
+
+            ])
+            
+            fig.update_layout(showlegend=False)
+            fig.show()
+
         elif n == 2: 
-            pass
-        else: # n = 1
+            fig = go.Figure(data=[
+                go.Scatter(x=self._orig_data[cols[0]], y=self._orig_data[cols[1]], mode='markers', marker_color='blue', name=''),
+                go.Scatter(x=select[cols[0]], y=select[cols[1]], mode='markers', 
+                        marker_color='red', name='')
+            ])
+            
+            fig.update_layout(showlegend=False)
+            fig.show()
+        else: # n = 1, plot number line maybe
             pass
 
     def plot_deepest(self, n=1) -> None:
-        pass
+        self._plot(self.deepest(n=n))
 
     def plot_outlying(self, n=1) -> None:
-        pass
+        self._plot(self.outlying(n=n))
 
-def PointwiseDepth(data: pd.DataFrame, K=None, J=2, containment='simplex', relax=False, deep_check=False) -> _PointwiseDepth:
+# Wraps the PointwiseDepth class in a function, because we need to compute depths before we pass down to the class
+def PointwiseDepth(data: pd.DataFrame, points: pd.Index=None, K=None, J=2, containment='simplex') -> _PointwiseDepth:
     if K is not None:
-        depth = _samplepointwisedepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=False)
+        depth = _samplepointwisedepth(data=data, points=points, K=K, J=J, containment=containment)
     else:
-        depth = _pointwisedepth(data=data, J=J, containment=containment)
+        depth = _pointwisedepth(data=data, points=points, J=J, containment=containment)
     
-    return _PointwiseDepth(data=data, depths=depth)
+    return _PointwiseDepth(df=data, depths=depth)
 
+# Wraps FunctionalDepth classes in a function, because we need to compute depths before we pass down to the class
 def FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 
 containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthMultivariateDataFrame]:   
 
-    # If there is not at least d + 2 functions for our d dimensional data, then for each function
-    # We won't have d + 1 vertices to construct a simplex, which means every simplex will be at least one dimensional degenerate
-    # Therefore we say depth is not well defined and error
-    if isinstance(data, list) and len(data) < data[0].shape[1] + 2:
-        raise DepthDegeneracy(f'Error: Need at least {len(data)} functions to form non-degenerate simplices in {data[0].shape + 2} dimensional space. Only have {len(data)}')
-
+    # Compute band depth completely or sample band depth
     if K is not None:
         depth = _samplebanddepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
     else:
         depth = _banddepth(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
 
-    if isinstance(depth, pd.DataFrame):
-        return _FunctionalDepthMultivariateDataFrame(names=keys, depths=depth)
-    else:
+    # Return the appropriate class
+    if isinstance(depth, pd.DataFrame): #Will only happen in multivariate case anyways
+        return _FunctionalDepthMultivariateDataFrame(depths=depth)
+    elif len(data) == 1: # Univariate case (by assumption)
         return _FunctionalDepthUnivariate(df=data[0], depths=depth)
+    else: # Multivariate case
+        return _FunctionalDepthSeries(df=data[0], depths=depth)

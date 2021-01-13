@@ -153,7 +153,7 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
         samples = pd.Series(index=df.columns, data=[np.mean(i) for i in samples])
 
     else:
-        # Multivariate case: partition list of DataFrames randomly, compute band depth w.r.t those
+        # TODO: Multivariate case: partition list of shuffled DataFrames, compute band depth w.r.t those, average
         shuffled = data.copy()
         random.shuffle(shuffled)
         ss = len(data) // K 
@@ -164,7 +164,7 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
     return samples
 
 def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Callable, str], relax: bool, deep_check: bool) -> None:
-    '''
+    """
     Handles errors in band depth methods.
 
     Parameters:
@@ -179,7 +179,7 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
     Returns:
     ----------
     None: Nothing is returned, but exceptions are raised if needed
-    '''
+    """
     
     # Type checking for all variables
     if not isinstance(data, list):
@@ -233,7 +233,7 @@ def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Ca
             raise ValueError('DataFrames indices must be the same')
         
 def _subsequences(s: list, l: int) -> list:
-    '''
+    """
     Returns a list of all possible subsequences of length l from the given input list
 
     Parameters:
@@ -246,8 +246,8 @@ def _subsequences(s: list, l: int) -> list:
     Returns:
     ----------
     list: List of subsequences
-    '''
-    
+    """
+
     return sorted(set(combinations(s, l)))
 
 
@@ -305,7 +305,25 @@ def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bo
     return band_depth
 
 def _simplex_depth(data: List[pd.DataFrame], curve: pd.DataFrame, J=2, relax=False):
-    """Calculates simplex depth of the given curve with respect to data"""
+    """
+    Calculates simplex depth of the given curve with respect to the given data
+
+    Parameters:
+    ----------
+    data: list
+        List of n x d matrices, where each matrix is a function observated at n discrete time points with d features
+    curve: pd.DataFrame
+        The particular function we would like to calculate band curve for
+    J=2: int
+        Parameter J in band depth. Defaulted to 2. 
+    relax: bool
+        If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
+
+    Returns:
+    ----------
+    float: Depth value for the given function with respect to the data passed 
+
+    """
     l, d = data[0].shape
     n = len(data)
     depth = 0
@@ -323,9 +341,25 @@ def _simplex_depth(data: List[pd.DataFrame], curve: pd.DataFrame, J=2, relax=Fal
 
     return depth
 
-def _pointwisedepth(data: pd.DataFrame, points: pd.Index=None, containment='simplex'):
-    """Compute pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
-    only compute depth for the given points (should be a subset of data.index)"""
+def _pointwisedepth(data: pd.DataFrame, points: Union[list, pd.Index]=None, containment='simplex') -> pd.Series:
+    """
+    Compute pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
+    only compute depth for the given points (should be a subset of data.index)
+    
+    Parameters:
+    ----------
+    data: pd.DataFrame
+        n x d DataFrame, where we have n points in d dimensional space.
+    points: list, pd.Index
+        The particular points (indices) we would like to calculate band curve for. If None, we calculate depth for all points
+    containment: str
+        Definition of containment
+
+    Returns:
+    ----------
+    pd.Series: Depth values for the given points with respect to the data. Index of Series are indices of points in the original data, and the values are the depths
+
+    """
     n, d = data.shape
     depths = []
     to_compute = data.index
@@ -350,6 +384,31 @@ def _pointwisedepth(data: pd.DataFrame, points: pd.Index=None, containment='simp
     return pd.Series(index=to_compute, data=depths)
 
 def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, containment='simplex'):
+    """
+    Compute sample pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
+    only compute depth for the given points (should be a subset of data.index)
+    
+    Parameters:
+    ----------
+    data: pd.DataFrame
+        n x d DataFrame, where we have n points in d dimensional space.
+    points: list, pd.Index
+        The particular points (indices) we would like to calculate band curve for. If None, we calculate depth for all points.
+    K=2:
+        Number of blocks to compute sample depth with. 
+    containment: str
+        Definition of containment.
+
+    Returns:
+    ----------
+    pd.Series: Depth values for the given points with respect to the data. Index of Series are indices of points in the original data, and the values are the depths
+
+    """
+
+    # If K=1, don't bother splitting the data. Just return regular depth. 
+    if K == 1:
+        return _pointwisedepth(data=data, points=points, containment=containment)
+
     n, d = data.shape 
     to_compute = data.index 
     depths = []
@@ -359,6 +418,7 @@ def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, contai
     # K blocks of points (indices)
     ss = n // K 
 
+    # Compute sample depth of each point
     for time in to_compute:
         cd = []
         for _ in range(ss):

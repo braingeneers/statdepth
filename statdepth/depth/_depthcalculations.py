@@ -12,7 +12,7 @@ from scipy.special import comb, binom
 
 from ._containment import _r2_containment, _r2_enum_containment, _simplex_containment, _select_containment, _is_valid_containment, _is_in_simplex
 
-# Custom error class for anytime there is going to be some degeneracy with depth calculation (i.e. k degenerate simplices)
+# Custom error/warning class for anytime there is going to be some degeneracy with depth calculation (i.e. degenerate simplices)
 class DepthDegeneracy(Exception):
     pass
 
@@ -44,20 +44,19 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
     ----------
     pd.Series, pd.DataFrame: Depth values for each function.
     """
+    depths = pd.Series()
 
     # Handle common errors
     _handle_depth_errors(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
 
     # Select containment definition
     cdef = _select_containment(containment=containment)
-
     # If only one item in the list, it is the real-valued case (by assumption)
     if len(data) == 1:
-
         # In the case of simplex containment in R2 for f: R --> R, the simplices of 2 points degenerate to 
-        # intervals, which is equivalent to the standard containment on R2
+        # intervals, which is equivalent to the standard containment on R2. Maybe warn user?
         if containment == 'simplex':
-            warnings.warn('Simplex containment for real-valued functions is degenerate, and equivalent to interval containment. Falling back to interval containment.')
+            # print('Simplex containment for real-valued functions is degenerate, and equivalent to standard interval containment (containment=\'r2\'). Falling back to interval containment.')
             cdef = _r2_containment
 
         band_depths = []
@@ -68,8 +67,8 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
             band_depths.append(_univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
 
         # Return a series indexed by our samples
-        return pd.Series(index=df.columns, data=band_depths)
-    else:
+        depths = pd.Series(index=df.columns, data=band_depths)
+    else: # Multivariate case
         if containment == 'simplex':
             depths = []
 
@@ -81,9 +80,9 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
                 cdata = [df for df in data if df is not cdf]
                 depths.append(_simplex_depth(data=cdata, curve=cdf, J=J, relax=relax))
                 
-            return pd.Series(index=f, data=depths)
+            depths = pd.Series(index=f, data=depths)
     
-    return None
+    return depths
 
 def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
@@ -129,6 +128,9 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
         orig = df.copy()
         ss = df.shape[1] // K
         
+        if containment == 'simplex':
+            cdef = _r2_containment
+
         # Iterate over curves (columns)
         for col in orig.columns:
             depths = []

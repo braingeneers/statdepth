@@ -152,7 +152,7 @@ def PointwiseDepth(data: pd.DataFrame, points: pd.Index=None, K=None, J=2, conta
 
 # Wraps FunctionalDepth classes in a function, because we need to compute depths before we pass down to the class
 def FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 
-containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthMultivariateDataFrame]:   
+containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthUnivariate, _FunctionalDepthMultivariateDataFrame]:   
 
     # Compute band depth completely or sample band depth
     if K is not None:

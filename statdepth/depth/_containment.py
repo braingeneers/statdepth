@@ -12,9 +12,7 @@ from scipy.optimize import linprog
 
 # This is not a solution I like, but I don't want to spam the user with
 # warnings when simplex containment is used, because linprog() is very whiny
-import warnings 
-warnings.filterwarnings('ignore')
-
+np.testing.suppress_warnings()
 
 def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, pd.DataFrame], bool], float]) -> None: 
     '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function.
@@ -140,7 +138,7 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
         containment += _is_in_simplex(simplex_points=np.array([df.loc[idx, :] for df in data]), 
                                 point=np.array(curve.loc[idx, :]))
     
-    # If relaxation, return proportion of containment, else return integer divion so that we 
+    # If relaxation, return proportion of containment, else do integer divion so that we 
     # only get 1 if all rows are contained
     return containment / l if relax else containment // l
 

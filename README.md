@@ -89,7 +89,7 @@ Then to compute band depth, we would use
 ```Python
 >>> from statdepth import FunctionalDepth
 
->>> FunctionalDepth([df1, df2, df3], containment='simplex', J=2, relax=True)
+>>> FunctionalDepth([df1, df2, df3, ... , df6], containment='simplex', J=2, relax=True)
 2    0.333333
 1    0.333333
 5    0.166667
@@ -100,14 +100,15 @@ dtype: float64
 
 ```
 
+where the index is the index of the DataFrame in the list passed. So in this case `df3` is the deepest multivariate curve. 
 ## 4. Containment
 
 The methodology implemented here requires a notion of "containment" of a function within a band. In R^2, we can check this pointwise. In higher dimensional space, there are more options. 
 
 Currently, we have the following notions of containment:  
 - `'r2'`: Standard pointwise interval containment
-- `'r2_enum'`: Treats each component in our vector-valued function as a real-valued function, and then uses the standard pointwise interval definition. (TODO)
-- `'simplex'`: A point is contained if it is contained in all simplices defined by the other curves
+<!-- - `'r2_enum'`: Treats each component in our vector-valued function as a real-valued function, and then uses the standard pointwise interval definition. (TODO) -->
+- `'simplex'`: A curve is contained if each discrete point in its image is contained by the simplex formed by other curves at that time. 
 
 #### i. Using an alternative definition of containment
 
@@ -137,7 +138,7 @@ The relaxation parameter is optional, and is used to relax the strict definition
 
 # 5. Methods
 
-`banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.DataFrame, pd.Series]`:  
+`FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, containment='r2', relax=False, deep_check=False)`
 
     Calculate the band depth for a set of functional curves.
 
@@ -163,34 +164,8 @@ The relaxation parameter is optional, and is used to relax the strict definition
 
     Returns:
     ----------
-    pd.Series: Depth values for each function.
+    _FuctionalDepthUnivariate, _FunctionalDepthSeries, _FunctionalDepthMultivariateDataFrame: Depth values for each function.
 
-`samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]`
+`def PointwiseDepth(data: pd.DataFrame, points: pd. Index=None, K=None, J=2, containment='simplex')`
 
-    Calculate the sample band depth for a set of functional curves.
-
-    This is done by
-    1. Splitting the data of n curves into K blocks of size ~n/K
-    2. Computing band depth with respect to each block
-    3. Returning the average of these
-
-    For K << n, this should approximate the band depth well. 
-
-    Parameters:
-    ----------
-    data: list of DataFrames
-        Functions to calculate band depth from
-    K: int 
-        Computes band depth by averaging band depth across K blocks of our original curves 
-    J: int (default=2)
-        J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
-    containment: Callable or string (default='r2')
-        Defines what containment means for the dataset.  
-    relax: bool
-        If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
-    deep_check: bool (default=False)
-        If True, perform a more extensive error checking routine. Optional because it can be computationally expensive for large datasets. 
-
-    Returns:
-    ----------
-    pd.Series: Depth values for each function.
+    Compute depth for up to n points from a distribution in R^p, where data is an nxp matrix. If points is not None, only compute depth for the given points (must be a subset of data.index)

@@ -47,7 +47,7 @@ class _FunctionalDepthSeries(AbstractDepth, pd.Series):
     def median(self):
         return self.deepest(n=1)
 
-    def depths(self):
+    def get_depths(self):
         return self._depths
 
     def get_data(self):

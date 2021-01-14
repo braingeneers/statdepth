@@ -138,7 +138,14 @@ The relaxation parameter is optional, and is used to relax the strict definition
 
 # 5. Methods
 
-`FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, containment='r2', relax=False, deep_check=False)`
+
+## 5.1: Top level classes
+All Depth-y classes subclass `pd.Series`.
+
+```Python
+FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 
+    containment='r2', relax=False, deep_check=False)
+```
 
     Calculate the band depth for a set of functional curves.
 
@@ -162,8 +169,47 @@ The relaxation parameter is optional, and is used to relax the strict definition
     deep_check: bool (default=False)
         If True, perform a more extensive error checking routine. Optional because it can be computationally expensive for large datasets. 
 
+    Methods:
+    ----------
+    ordered(): Return the ordered depths
+    deepest(n=1): Return the n deepest curves
+    outlying(n=1): Return the n outlying curves
+
+    plot_depths(invert_colors=False, marker=None): Plot the depths, where the colorscale is the depths
+    plot_outlying(n=1): Plot all the functions and the n most outlying in a distinct color
+    plot_deepest(n=1): Plot all the functions and the n deepest in a distinct color
+
+    sorted(): Alias for ordered()
+    get_depths(): Return the depths
+    get_data(): Return the original DataFrame 
+
+```Python
+def PointwiseDepth(data: pd.DataFrame, points: pd.Index=None, K=None, containment='simplex')
+```
+
+    Compute statistical depth for up to n points from a distribution in R^p. If points is not None, only compute depth for the given points (must be a subset of data.index)
+
+    Parameters:
+    ----------
+    data: pd.DataFrame
+        The input data. An n x p matrix where each row is a point in R^p.
+    points: pd.Index=None
+        Points to compute depth for. If None, compute depth for all points in the DataFrame.
+    K: int=None
+        Number of blocks to use if using sample band depth
+    containment: str='simplex'
+        Definition of containment (depth) to use
     
-`def PointwiseDepth(data: pd.DataFrame, points: pd. Index=None, K=None, J=2, containment='simplex')`
+    Methods:
+    ----------
+    ordered(): Return the ordered depths
+    deepest(n=1): Return the n deepest curves
+    outlying(n=1): Return the n outlying curves
 
-    Compute depth for up to n points from a distribution in R^p, where data is an nxp matrix. If points is not None, only compute depth for the given points (must be a subset of data.index)
+    plot_depths(invert_colors=False, marker=None): Plot the depths, where the colorscale is the depths
+    plot_outlying(n=1): Plot all the functions and the n most outlying in a distinct color
+    plot_deepest(n=1): Plot all the functions and the n deepest in a distinct color
 
+    sorted(): Alias for ordered()
+    get_depths(): Return the depths
+    get_data(): Return the original DataFrame 

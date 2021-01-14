@@ -103,3 +103,7 @@ ENV/
 
 # IDE settings
 .vscode/
+
+# My testing Jupyter notebooks, these are pretty messy and not
+# really useful at all
+testing_notebooks/*

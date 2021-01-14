@@ -88,8 +88,6 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         '''Plots all the data in blue and marks the n most outlying curves in red'''
         self._plot(deep_or_outlying=self.outlying(n=n))
 
-    
-
 class _PointwiseDepth(_FunctionalDepthSeries):
     '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''
 

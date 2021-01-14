@@ -106,9 +106,9 @@ where the index is the index of the DataFrame in the list passed. So in this cas
 The methodology implemented here requires a notion of "containment" of a function within a band. In R^2, we can check this pointwise. In higher dimensional space, there are more options. 
 
 Currently, we have the following notions of containment:  
-- `'r2'`: Standard pointwise interval containment
+- `'r2'`: Standard pointwise interval containment. 
 <!-- - `'r2_enum'`: Treats each component in our vector-valued function as a real-valued function, and then uses the standard pointwise interval definition. (TODO) -->
-- `'simplex'`: A curve is contained if each discrete point in its image is contained by the simplex formed by other curves at that time. 
+- `'simplex'`: A d dimensional function is contained by d+1 other functions if each discrete point is contained by the simplex formed by d + 1 other functions at each time index. 
 
 #### i. Using an alternative definition of containment
 
@@ -162,10 +162,8 @@ The relaxation parameter is optional, and is used to relax the strict definition
     deep_check: bool (default=False)
         If True, perform a more extensive error checking routine. Optional because it can be computationally expensive for large datasets. 
 
-    Returns:
-    ----------
-    _FuctionalDepthUnivariate, _FunctionalDepthSeries, _FunctionalDepthMultivariateDataFrame: Depth values for each function.
-
+    
 `def PointwiseDepth(data: pd.DataFrame, points: pd. Index=None, K=None, J=2, containment='simplex')`
 
     Compute depth for up to n points from a distribution in R^p, where data is an nxp matrix. If points is not None, only compute depth for the given points (must be a subset of data.index)
+

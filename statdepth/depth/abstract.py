@@ -17,10 +17,3 @@ class AbstractDepth(ABC):
     def outlying(self, n=1):
         raise NotImplementedError
 
-    # Aliases for some abstract methods above
-    def sorted(self, ascending=False):
-        return self.ordered(ascending=ascending)
-
-    def median(self):
-        return self.deepest(n=1)
-

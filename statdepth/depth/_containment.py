@@ -1,6 +1,7 @@
 from itertools import combinations
 from typing import Callable, Union, List
 from inspect import signature
+import warnings 
 
 import numpy as np
 import scipy as sp 
@@ -13,6 +14,8 @@ from scipy.optimize import linprog
 # This is not a solution I like, but I don't want to spam the user with
 # warnings when simplex containment is used, because linprog() is very whiny
 np.testing.suppress_warnings()
+
+warnings.filterwarnings("ignore")
 
 def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, pd.DataFrame], bool], float]) -> None: 
     '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function.

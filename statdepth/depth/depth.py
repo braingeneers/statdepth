@@ -39,7 +39,20 @@ class _FunctionalDepthSeries(AbstractDepth, pd.Series):
             return pd.Series(index=[list(self._ordered_depths.index)[-1]], data=[self._ordered_depths.values[-1]])
         else:
             return pd.Series(index=self._ordered_depths.index[-n: ], data=self._ordered_depths.values[-n: ])
-    
+
+    # Aliases for some abstract methods above
+    def sorted(self, ascending=False):
+        return self.ordered(ascending=ascending)
+
+    def median(self):
+        return self.deepest(n=1)
+
+    def depths(self):
+        return self._depths
+
+    def get_data(self):
+        return self._orig_data
+
 
 class _FunctionalDepthMultivariateDataFrame(AbstractDepth, pd.DataFrame):
     # Don't copy over all the functions. Numpy arrays might be large

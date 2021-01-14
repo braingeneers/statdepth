@@ -2,11 +2,9 @@
 
 """Tests for `statdepth` package."""
 
-
 import unittest
 
-from statdepth import statdepth
-
+import statdepth 
 
 class TestStatdepth(unittest.TestCase):
     """Tests for `statdepth` package."""

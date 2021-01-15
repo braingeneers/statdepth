@@ -175,7 +175,13 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     A = np.r_[simplex_points.T, np.ones((1, n_points))]
     b = np.r_[point, np.ones(1)]
     
-    lp = linprog(c, A_eq=A, b_eq=b)
+    # This barely ever errors, but when it does the problem is infeasible so let's assume
+    # There is no containment
+    try:    
+        lp = linprog(c, A_eq=A, b_eq=b)
+    except:
+        warnings.warn('Simplex computation failed. Assuming False')
+        return False
     
     return lp.success
 

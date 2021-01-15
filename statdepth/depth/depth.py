@@ -182,6 +182,9 @@ class _PointwiseDepth(_FunctionalDepthSeries):
     def plot_outlying(self, n=1) -> None:
         self._plot(self.outlying(n=n))
 
+    def plot_distribution(self, invert_colors=False, marker=None) -> None:
+        self.plot_depths(invert_colors, marker)
+
 # Wraps the PointwiseDepth class in a function, because we need to compute depths before we pass down to the class
 def PointwiseDepth(data: pd.DataFrame, points: pd.Index=None, K=None, containment='simplex') -> _PointwiseDepth:
     if K is not None:

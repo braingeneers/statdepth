@@ -18,7 +18,8 @@ np.testing.suppress_warnings()
 warnings.filterwarnings("ignore")
 
 def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, pd.DataFrame], bool], float]) -> None: 
-    '''Checks if the given function is a valid definition for containment. Used when user passes a custom containment function.
+    """
+    Checks if the given function is a valid definition for containment. Used when user passes a custom containment function.
     
     Parameters:
     ----------
@@ -28,7 +29,7 @@ def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, 
     Returns:
     ----------
     Boolean indicating the validity of the passed function
-    '''
+    """
 
     # If we got here in _select_containment then the passed string is invalid
     if isinstance(containment, str):
@@ -43,7 +44,8 @@ def _is_valid_containment(containment: Callable[[pd.DataFrame, Union[pd.Series, 
     return containment
 
 def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:
-    '''Produces \lambda_r with the given input data, using the standard ordering on R as the definition for containment.
+    """
+    Produces \lambda_r with the given input data, using the standard ordering on R as the definition for containment.
     Parameters:
     ----------
 
@@ -57,7 +59,7 @@ def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:
     Returns:
     ----------
     float: If relax=False, then 0 if the function is not contained in the curve, 1 if it is. If relax=True, then we consider the proportion of time the curve is in the band, so we will return a number between 0 and 1. 
-    '''
+    """
 
     containment = 0
     
@@ -80,7 +82,9 @@ def _r2_containment(data: pd.DataFrame, curve: pd.Series, relax: bool) -> float:
 
 
 def _r2_enum_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: bool) -> float:
-    '''Implements the r2_enum definition of containment, where we treat each component in the vector valued function as a real valued function, and calculate containment for each one. If all the components are contained in the curved defined by that componenent, then we say the function is contained.
+    """
+    Implements the r2_enum definition of containment, where we treat each component in the vector valued function as a real valued function, 
+    and calculate containment for each one. If all the components are contained in the curved defined by that componenent, then we say the function is contained.
     
     Parameters:
     ----------
@@ -95,25 +99,13 @@ def _r2_enum_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
     Returns:
     ----------
     float: If relax=False, then 0 if the function is not contained in the curve, 1 if it is. If relax=True, then we consider the proportion of time the curve is in the band, so we will return a number between 0 and 1. 
-    '''
+    """
 
-    # TODO: This entire thing. I have no idea what im doing lol. All wrong so far
-
-    depth = pd.DataFrame()
-    l, p = data.shape 
-    
-    # Choose any DataFrame since assumption is that all columns are the same -- dont need to check for this, user can deal with error.
-    for col in data[0].columns:
-        t = pd.DataFrame()
-        for df in data:
-            t[col] = data[col]
-    
-
-    return depth / len(data) if relax else depth // len(data)
-
+    raise NotImplementedError
 
 def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: bool) -> float:
-    '''Implements the simplex definition of containment for multivariate functions in R^n
+    """
+    Implements the simplex definition of containment for multivariate functions in R^n
         
     Parameters:
     ----------
@@ -128,7 +120,7 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
     Returns:
     ----------
     float: If relax=False, then 0 if the function is not contained in the curve, 1 if it is. If relax=True, then we consider the proportion of time the curve is in the band, so we will return a number between 0 and 1. 
-    '''
+    """
 
     n = len(data)
     l, d = data[0].shape
@@ -146,7 +138,8 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
     return containment / l if relax else containment // l
 
 def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
-    '''Checks if the d dimensional point is in the simplex formed by d + 1 simplex_points (geometric degeneracy allowed)
+    """
+    Checks if the d dimensional point is in the simplex formed by d + 1 simplex_points (geometric degeneracy allowed)
     
     Parameters:
     ----------
@@ -159,7 +152,7 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     Returns:
     ----------
     bool: True if point is contained in the simplex, False otherwise
-    '''
+    """
 
     # Check if the vector x (point) can be written as a 
     # convex combination of x_1,...,x_n (simplex_points), i.e.
@@ -186,7 +179,8 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     return lp.success
 
 def _select_containment(containment: Union[str, Callable]) -> Callable:
-    '''Helper function to select definition of containment
+    """
+    Helper function to select definition of containment
     
     Parameters:
     ----------
@@ -198,7 +192,7 @@ def _select_containment(containment: Union[str, Callable]) -> Callable:
     ----------
     Callable: Returns the containment function, or raises an error 
 
-    '''
+    """
     
     # Select our containment definition if it is in our pre-defined list
     if containment == 'r2':

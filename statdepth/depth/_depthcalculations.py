@@ -381,6 +381,10 @@ def _pointwisedepth(data: pd.DataFrame, points: Union[list, pd.Index]=None, cont
                         np.array(data.loc[seq, :]), point=np.array(point))
                 
             depths.append(S_nj / binom(n, d + 1))
+    elif containment == 'l1':
+        return _L1_depth(data=data, points=points)
+    else: # Probably will be more in the future 
+        pass
 
     return pd.Series(index=to_compute, data=depths)
 
@@ -419,7 +423,8 @@ def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, contai
     # K blocks of points (indices)
     ss = n // K 
 
-    # Compute sample depth of each point
+    # Compute sample depth of each point, should be containment agnostic
+    # Since the computation is being done in _pointwisedepth
     for time in to_compute:
         cd = []
         for _ in range(ss):
@@ -434,3 +439,28 @@ def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, contai
         depths.append(np.mean(cd))
         
     return pd.Series(index=to_compute, data=depths)
+
+
+def _L1_depth(data: pd.DataFrame, points: pd.Index=None):
+    """
+    Computes L1 data depth of the given points. 
+    """
+    n, d = data.shape
+    depths = []
+    to_compute = data.index
+    
+    if points is not None:
+        to_compute = points
+    
+    for point in to_compute:
+        sum_e = 0
+        vec = data.loc[point, :]
+        for other in data.drop(point, axis=0).index:
+            sum_e += (data.loc[other, :] - vec) / np.linalg.norm(vec - data.loc[other, :])
+            
+        depths.append(np.linalg.norm(sum_e) / n)
+        
+    return pd.Series(index=to_compute, data=1 - np.array(depths))
+
+def _sample_L1_depth(data: pd.DataFrame, points: pd.Index=None, K=2):
+    pass

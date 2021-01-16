@@ -1,7 +1,6 @@
 import pandas as pd 
 import numpy as np
 from typing import List, Union
-
 from scipy.special import erf, binom
 
 from ._depthcalculations import _subsequences
@@ -12,7 +11,7 @@ def _norm_cdf(x: np.array, mu: float, sigma: float):
     """
     return 0.5 * (1 + erf(x - mu) / (sigma * np.sqrt(2)))
 
-def _strict_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2):
+def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2, strict=False):
     """
     Calculate uncertain depth for the given curve, assuming each entry in our data comes from a normal distribution 
     where the mean is the observed value and the variance is the corresponding entry in sigma2.
@@ -31,29 +30,76 @@ def _strict_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: 
     pd.Series: Depth values for each function (column)
     """
 
+    n, p = data.shape
     depth = 0
-    sigma = pd.DataFrame(np.power(sigma2, .5))
+    sigma = sigma2.pow(.5)
 
     # Drop our current curve from our data
     if curve in data.columns:   
         data = data.drop(curve, axis=1)
 
     subseq = _subsequences(data.columns, J)
-    for seq in subseq:
-        d = 1
-        f1 = seq[0]
-        f2 = seq[1]
-        for time in data.index:
-            p1 = _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma.loc[time, f1])
-            p2 = _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma.loc[time, f2])
+    if J == 2:
+        for seq in subseq:
+            d = 1
+            f1 = seq[0]
+            f2 = seq[1]
+            for time in data.index:
+                p1 = _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma.loc[time, f1])
+                p2 = _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma.loc[time, f2])
 
-            d *= p1 + p2 - 2 * p1 * p2
-        depth += d
+                if strict:
+                    d *= p1 + p2 - 2 * p1 * p2
+                else: 
+                    d += p1 + p2 - 2 * p1 * p2
 
-    return depth / binom(data.shape[1], J)
+            depth += d
+    elif J == 3:
+        for seq in subseq:
+            d = 1
+            f1, f_2, f_3 = seq[0], seq[1], seq[2]
 
-def _gen_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2):
-    pass
+            for time in data.index:
+                p1 = _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma.loc[time, f1])
+                p2 = _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma.loc[time, f2])
+                p3 = _norm_cdf(data.loc[time, f3], data.loc[time, f3], sigma.loc[time, f3])
+                
+                if strict:
+                    d *= p1 + p2 + p3 - p1 * p2 - p2*p3 - p1*p3
+                else:
+                    d += p1 + p2 + p3 - p1 * p2 - p2*p3 - p1*p3
+
+            depth += d
+    else: # Handle J=4 later, not sure about computation
+        pass
+
+    return depth / binom(data.shape[1], J) if strict else depth / binom(data.shape[1], J) * n / p # Because in the nonstrict case we are summing 1/|D| n times
+
+# def _gen_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2):
+#     n, p = data.shape
+#     depth = 0
+#     sigma = sigma2.pow(.5)
+
+#     # Drop our current curve from our data
+#     if curve in data.columns:   
+#         data = data.drop(curve, axis=1)
+
+#     subseq = _subsequences(data.columns, J)
+#     for seq in subseq:
+#         d = 1
+#         f1 = seq[0]
+#         f2 = seq[1]
+#         for time in data.index:
+#             p1 = _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma.loc[time, f1])
+#             p2 = _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma.loc[time, f2])
+
+#             d += p1 + p2 - 2 * p1 * p2
+#         depth += d / p
+
+#     return depth / binom(p, J)
+
+
+
 
 def uncertain_depth(data: pd.DataFrame, sigma2: pd.DataFrame, J: int=2, strict=True):
     """
@@ -62,9 +108,5 @@ def uncertain_depth(data: pd.DataFrame, sigma2: pd.DataFrame, J: int=2, strict=T
     depths = []
 
     for col in data:
-        if strict:
-            depths.append(_strict_uncertain_depth(data, col, sigma2, J))
-        else:
-            depths.append(_gen_uncertain_depth(data, col, sigma2, J))
-
+        depths.append(_uncertain_depth_univariate(data=data, curve=col, sigma2=sigma2, J=J))
     return pd.Series(index=data.columns, data=depths)

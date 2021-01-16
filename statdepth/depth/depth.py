@@ -199,6 +199,10 @@ def PointwiseDepth(data: pd.DataFrame, points: pd.Index=None, K=None, containmen
     
     return _PointwiseDepth(df=data, depths=depth)
 
+def ProbabilisticDepth(data: pd.DataFrame):
+    pass
+
+
 # Wraps FunctionalDepth classes in a function, because we need to compute depths before we pass down to the class
 def FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 
 containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthUnivariate, _FunctionalDepthMultivariateDataFrame]:   

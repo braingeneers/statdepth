@@ -6,11 +6,11 @@ from scipy.special import erf, binom
 
 from ._depthcalculations import _subsequences
 
-def _norm_cdf(x: np.array, mu: float, sigma2: float):
+def _norm_cdf(x: np.array, mu: float, sigma: float):
     """
     Estimate the CDF at x for the normal distribution parametrized by mu and sigma^2
     """
-    return 0.5 * (1+erf(x - mu) / (np.sqrt(sigma2) * np.sqrt(2)))
+    return 0.5 * (1 + erf(x - mu) / (sigma * np.sqrt(2)))
 
 def _strict_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2):
     """
@@ -32,6 +32,8 @@ def _strict_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: 
     """
 
     depth = 0
+    sigma = pd.DataFrame(np.power(sigma2, .5))
+
     # Drop our current curve from our data
     if curve in data.columns:   
         data = data.drop(curve, axis=1)
@@ -42,7 +44,10 @@ def _strict_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: 
         f1 = seq[0]
         f2 = seq[1]
         for time in data.index:
-            d *= _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma2.loc[time, f1]) + _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma2.loc[time, f2]) - 2 * _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma2.loc[time, f1]) * _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma2.loc[time, f2])
+            p1 = _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma.loc[time, f1])
+            p2 = _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma.loc[time, f2])
+
+            d *= p1 + p2 - 2 * p1 * p2
         depth += d
 
     return depth / binom(data.shape[1], J)

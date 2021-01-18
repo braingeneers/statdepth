@@ -163,12 +163,37 @@ dependencies:
   - zlib=1.2.11=h7795811_1009
   - zstd=1.4.5=h289c70a_2
   - pip:
+    - alabaster==0.7.12
+    - babel==2.9.0
+    - commonmark==0.9.1
+    - docutils==0.16
     - functional-depth-methods==0.1.0
+    - future==0.18.2
+    - imagesize==1.2.0
+    - livereload==2.6.3
     - llvmlite==0.35.0
+    - lunr==0.5.8
+    - markdown==3.3.3
+    - mkdocs==1.1.2
     - mlxtend==0.17.3
+    - nltk==3.5
     - numba==0.52.0
+    - plotly==4.14.1
     - pyqt5-sip==4.19.18
     - pyqtchart==5.12
     - pyqtwebengine==5.12.1
+    - pyyaml==5.3.1
+    - recommonmark==0.7.1
+    - regex==2020.11.13
+    - retrying==1.3.3
+    - snowballstemmer==2.0.0
+    - sphinx==3.4.3
+    - sphinxcontrib-applehelp==1.0.2
+    - sphinxcontrib-devhelp==1.0.2
+    - sphinxcontrib-htmlhelp==1.0.3
+    - sphinxcontrib-jsmath==1.0.1
+    - sphinxcontrib-qthelp==1.0.3
+    - sphinxcontrib-serializinghtml==1.1.4
     - statdepth==0.1.0
+    - tqdm==4.56.0
 prefix: /Users/julian/opt/miniconda3/envs/base-data-science

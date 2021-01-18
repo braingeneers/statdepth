@@ -30,6 +30,11 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
     pd.Series: Depth values for each function (column)
     """
 
+    if strict:
+        sym = '*'
+    else:
+        sym = '+'
+
     n, p = data.shape
     depth = 0
     sigma = sigma2.pow(.5)

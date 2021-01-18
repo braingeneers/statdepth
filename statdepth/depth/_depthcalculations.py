@@ -5,14 +5,14 @@ from typing import Callable, List, Union
 
 import numpy as np
 import scipy as sp 
-import pandas as pd 
+import pandas as pd
 
 from numba import jit
 from scipy.special import comb, binom
 
 from ._containment import _r2_containment, _r2_enum_containment, _simplex_containment, _select_containment, _is_valid_containment, _is_in_simplex
 
-# Custom error/warning class for anytime there is going to be some degeneracy with depth calculation (i.e. degenerate simplices)
+# Custom error class for anytime there is going to be some degeneracy with depth calculation (i.e. degenerate simplices)
 class DepthDegeneracy(Exception):
     pass
 
@@ -72,7 +72,7 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
         if containment == 'simplex':
             depths = []
 
-            # Get 'columns' of functions, which are just their indices
+            # Get 'index' of functions, which are just their indices in the list
             f = [i for i in range(len(data))]
 
             # Compute band depth for each function (DataFrame)
@@ -114,6 +114,10 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
     ----------
     pd.Series: Depth values for each function.
     """
+    # This has a much lower asymtotic complexity, but a much much higher space complexity,
+    # Since to sample from n functions (one for each curve, without replacement), we require copying the data
+    # n - 1 times
+    
     samples = []
     depths = []
 
@@ -125,6 +129,7 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
     # Univariate case
     if len(data) == 1:
         df = data[0]
+
         orig = df.copy()
         ss = df.shape[1] // K
         
@@ -146,12 +151,11 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
                 depths.append(_univariate_band_depth(data=t, curve=col, relax=relax, containment=cdef, J=J))
             
             # Collect these estimates
-            samples.append(depths)
+            samples.append(np.mean(depths))
             df = orig.copy()
 
         # Average them and return a series
-        samples = pd.Series(index=df.columns, data=[np.mean(i) for i in samples])
-
+        samples = pd.Series(index=df.columns, data=samples)
     else:
         # TODO: Multivariate case: partition list of shuffled DataFrames, compute band depth w.r.t those, average
         shuffled = data.copy()
@@ -447,20 +451,28 @@ def _L1_depth(data: pd.DataFrame, points: pd.Index=None):
     """
     n, d = data.shape
     depths = []
+
     to_compute = data.index
-    
+    idx = data.index
+
     if points is not None:
         to_compute = points
     
     for point in to_compute:
         sum_e = 0
         vec = data.loc[point, :]
-        for other in data.drop(point, axis=0).index:
+
+        # Ugly code, but faster than 
+        # Computing data.drop(point).index each time :shrug:
+        cidx = idx[:]
+        cidx.remove(point)
+
+        for other in cidx:
             sum_e += (data.loc[other, :] - vec) / np.linalg.norm(vec - data.loc[other, :])
             
         depths.append(np.linalg.norm(sum_e) / n)
         
-    return pd.Series(index=to_compute, data=1 - np.array(depths))
+    return pd.Series(index=to_compute, data=1-np.array(depths))
 
 def _sample_L1_depth(data: pd.DataFrame, points: pd.Index=None, K=2):
     pass

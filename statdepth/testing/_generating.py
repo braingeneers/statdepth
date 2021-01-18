@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import Union, List
 
-def generate_noisy_univariate(data: Union[list, np.array]=None, n: int=20, columns=None, index=None):
+def generate_noisy_univariate(data: Union[list, np.array]=None, n: int=20, columns=None, index=None) -> pd.DataFrame:
     """
     Generate n univariate functions that are equal to the given data plus some random pertubations. 
     Should be used for testing / understanding other methods in this library.
@@ -42,9 +42,9 @@ def generate_noisy_univariate(data: Union[list, np.array]=None, n: int=20, colum
 
     return df
 
-def generate_noisy_multivariate(data: pd.DataFrame=None, l: int=5, n: int=10, d: int=3, columns=None, index=None) -> List[pd.DataFrame]:
+def generate_noisy_multivariate(data: pd.DataFrame=None, num_curves: int=5, n: int=10, d: int=3, columns=None, index=None) -> List[pd.DataFrame]:
     """
-    Generate l noisy multivariate functions with d features observed at n time points. 
+    Generate num_curves noisy multivariate functions with d features observed at n time points. 
     Should be used for testing / understanding other methods in this library.
 
     Parameters:
@@ -72,7 +72,7 @@ def generate_noisy_multivariate(data: pd.DataFrame=None, l: int=5, n: int=10, d:
     if data is None:
         data = np.random.rand(n, d)
         
-    for k in range(l):
+    for k in range(num_curves):
         r = np.random.rand()
         fs.append(pd.DataFrame(data) * r)
 
@@ -84,7 +84,8 @@ def generate_noisy_multivariate(data: pd.DataFrame=None, l: int=5, n: int=10, d:
         for df in fs:
             df.columns = columns
     
-    return fs    
+    return fs
+
 def generate_noisy_pointcloud(n: int=50, d: int=2, columns=None, index=None) -> pd.DataFrame:
     """
     Generate n d-dimensional points from the normal distribution over [0,1]

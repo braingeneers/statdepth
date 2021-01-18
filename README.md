@@ -137,6 +137,14 @@ The returned float should be a value between 0 and 1 (this is not enforced).
 The relaxation parameter is optional, and is used to relax the strict definition of containment into a definition that considers the proportion of "time" a function is contained.
 
 # 5. Methods
+All depth classes implement a `K` paremeter, which computes sampled depth instead of exact depth. This should reduce computational costs for large datasets. 
+
+For a function f, this is done by
+1. Splitting the data of n functions into K blocks of size ~n/K
+2. Computing band depth of f with respect to each block
+3. Returning the average of these
+
+For K << n, this should approximate the band depth well. 
 
 
 ## 5.1: Top level classes

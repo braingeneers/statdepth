@@ -453,7 +453,7 @@ def _L1_depth(data: pd.DataFrame, points: pd.Index=None):
     depths = []
 
     to_compute = data.index
-    idx = data.index
+    idx = list(data.index)
 
     if points is not None:
         to_compute = points

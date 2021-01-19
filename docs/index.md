@@ -93,7 +93,7 @@ Given a n x p DataFrame for pointcloud data in R^p, each column is a dimension a
 In this case, to calculate depth of each point with respect to the others, we use 
 
 ```Python
->>> from statdepth import PointwiseDepth
+>>> from statdepth import PointcloudDepth
 
 >>> df
           0         1

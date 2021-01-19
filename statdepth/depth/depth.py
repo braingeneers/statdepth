@@ -190,7 +190,7 @@ class _PointwiseDepth(_FunctionalDepthSeries):
         self.plot_depths(invert_colors, marker)
 
 # Wraps the PointwiseDepth class in a function, because we need to compute depths before we pass down to the class
-def PointwiseDepth(data: pd.DataFrame, points: pd.Index=None, K=None, containment='simplex') -> _PointwiseDepth:
+def PointcloudDepth(data: pd.DataFrame, points: pd.Index=None, K=None, containment='simplex') -> _PointwiseDepth:
     if K is not None:
         depth = _samplepointwisedepth(data=data, points=points, K=K, containment=containment)
     else:

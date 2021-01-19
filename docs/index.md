@@ -1,31 +1,16 @@
-# statdepth: Functional Depth Methods for Multivariate Time Series Data 
-This package implements depth calculation methods for multivariate time-series data.
+# statdepth: Depth Calculation Methods 
+This package implements depth calculation methods for univariate time series data, multivariate time series data, and pointcloud data.
 
-# 1. What is functional depth?
-Functional depth, specifically band depth, is a generalization of the median to a set of functions. Given a set of functions (or curves), band depths allows us to order our curves with respect to their "centrality." The larger the depth, the "deeper" the curve, and the curve with the highest band depth is the "most central" (in a not-so-formal sense 😀).
+# 1. What is statistical depth?
 
-This method implements the theory proposed in the paper [*On the Concept of Depth for Functional Data*](https://www.researchgate.net/publication/33397608_On_the_Concept_of_Depth_for_Functional_Data) by López-Pintado and Juan Romo. 
+Statistical depth allows us to assign a non-negative and bounded real number to each observation in some dataset such that the largest depth value indicates the sample most representitive of the generating distrubution, and the lowest depth value indicates the most outlying sample. 
 
-# 2. Development
+This allows us to order our observations by their "centrality" and "outylingness." This not only allows us to determine the "best" sample, but is also a non-parametric way to remove outliers. 
 
-To set up the development environment, run
-```
-conda env create --file environment.yml
-```
+# 2. What is functional depth?
+Functional depth is the generalization of statistical depth to functions (called curves). The larger the depth, the "deeper" the curve, and the curve with the highest band depth is the "most central", and is typically called the median. In this sense, we assume each function is a single observation.
 
-To install locally, run
-
-```
-pip install .
-```
-
-This code is written in Python, with most methods written in [Numpy](https://numpy.org/). It also uses [numba](https://numba.pydata.org/), a high performance Python compiler. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN, so this should remove any speed issues Python has. 
-
-Depending on how this ends up being used, [dask](https://dask.org/) may also be implemented for parallelization. 
-
-# 3. Usage
-
-## 3.1: Data Structure Assumptions
+# 3. General Usage and Examples
 For the functional cases, your data is indexed by time. Either your data is a set of real valued functions, or your data is a set of multivariate functions, with data collected at a discrete number of time points. We consider the two cases:
 
 #### i. Real-valued functions
@@ -198,9 +183,9 @@ Parameters:
 Returns:
    * pd.Series, pd.DataFrame: 
       * Depth values for each function.
-
-
+      
 Analytic methods:
+<font size="4">
 - `ordered(ascending=False)`: Sort the curves by their band depth 
 - `deepest(n=1)`: Return the `n` deepest curves
 - `outlying(n=1)`: Return the `n` most outlying curves
@@ -210,10 +195,13 @@ Analytic methods:
 - `get_data()`: Return the original data passed 
 - `sorted(ascending=False)`: Alias for ordered()
 - `median()`: Alias for `deepest(n=1)`
+</font>
 
+<font size="4">
 Visualizations:
 - `plot_deepest(n=1)`: Plot all the curves with the `n` deepest marked in red
 - `plot_outlying(n=1)`: Plot all curves with the `n` outyling marked in red
+</font>
 
 ## 5.2: PointcloudDepth
 
@@ -240,6 +228,7 @@ Returns:
    * Depth values for the given points with respect to the data. Index of Series are indices of points in the original data, and the values are the depths
 
 Analytic methods:
+<font size="4">
 - `ordered(ascending=False)`: Sort the curves by their band depth 
 - `deepest(n=1)`: Return the `n` deepest curves
 - `outlying(n=1)`: Return the `n` most outlying curves
@@ -249,11 +238,14 @@ Analytic methods:
 - `get_data()`: Return the original data passed 
 - `sorted(ascending=False)`: Alias for ordered()
 - `median()`: Alias for `deepest(n=1)`
+</font>
 
+<font size="4">
 Visualizations:
 - `plot_depths(invert_colors=False)`: Plot all datapoints and color them by their depth. If dimension of data is greater than 3, plot parallel axis intead.
 - `plot_deepest(n=1)`: Plot all the curves with the `n` deepest marked in red
 - `plot_outlying(n=1)`: Plot all curves with the `n` outyling marked in red
 - `plot_distribution(invert_colors=False)`: Alias for `plot_depths()`
+</font>
 
 ## 5.3: Probabilistic Depth

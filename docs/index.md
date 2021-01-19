@@ -197,8 +197,8 @@ Analytic methods:
 - `median()`: Alias for `deepest(n=1)`
 </font>
 
-<font size="4">
 Visualizations:
+<font size="4">
 - `plot_deepest(n=1)`: Plot all the curves with the `n` deepest marked in red
 - `plot_outlying(n=1)`: Plot all curves with the `n` outyling marked in red
 </font>
@@ -240,12 +240,12 @@ Analytic methods:
 - `median()`: Alias for `deepest(n=1)`
 </font>
 
-<font size="4">
 Visualizations:
-- `plot_depths(invert_colors=False)`: Plot all datapoints and color them by their depth. If dimension of data is greater than 3, plot parallel axis intead.
-- `plot_deepest(n=1)`: Plot all the curves with the `n` deepest marked in red
-- `plot_outlying(n=1)`: Plot all curves with the `n` outyling marked in red
-- `plot_distribution(invert_colors=False)`: Alias for `plot_depths()`
+<font size="4">
+- `plot_depths(invert_colors=False)`: Plot all datapoints and color them by their depth. If dimension of data is greater than 3, plot parallel axis intead.  
+- `plot_deepest(n=1)`: Plot all the curves with the `n` deepest marked in red  
+- `plot_outlying(n=1)`: Plot all curves with the `n` outyling marked in red  
+- `plot_distribution(invert_colors=False)`: Alias for `plot_depths()`  
 </font>
 
 ## 5.3: Probabilistic Depth

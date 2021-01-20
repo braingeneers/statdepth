@@ -41,12 +41,6 @@ class _FunctionalDepthSeries(AbstractDepth, pd.Series):
         else:
             return pd.Series(index=self._ordered_depths.index[-n: ], data=self._ordered_depths.values[-n: ])
 
-    def drop_outlying_data(self, n=1) -> pd.DataFrame:
-        return self._orig_data.drop(self.outlying(n=n).index, axis=0)
-    
-    def get_deep_data(self, n=1) -> pd.DataFrame:
-        return self._orig_data.loc[self.deepest(n=n).index, :]
-
     # Aliases for some abstract methods above
     def sorted(self, ascending=False):
         return self.ordered(ascending=ascending)
@@ -105,6 +99,13 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
     def plot_outlying(self, n=1) -> None:
         '''Plots all the data in blue and marks the n most outlying curves in red'''
         self._plot(deep_or_outlying=self.outlying(n=n))
+
+    # Have to redefine these because in the univariate case our samples are column based
+    def drop_outlying_data(self, n=1) -> pd.DataFrame:
+        return self._orig_data.drop(self.outlying(n=n).index, axis=1)
+    
+    def get_deep_data(self, n=1) -> pd.DataFrame:
+        return self._orig_data.loc[:, self.deepest(n=n).index]
 
 class _PointwiseDepth(_FunctionalDepthSeries):
     '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''
@@ -180,6 +181,13 @@ class _PointwiseDepth(_FunctionalDepthSeries):
             fig.show()
         else: # n = 1, plot number line maybe
             pass
+        
+    def drop_outlying_data(self, n=1) -> pd.DataFrame:
+        return self._orig_data.drop(self.outlying(n=n).index, axis=0)
+    
+    def get_deep_data(self, n=1) -> pd.DataFrame:
+        return self._orig_data.loc[self.deepest(n=n).index, :]
+
 
     def plot_deepest(self, n=1) -> None:
         self._plot(self.deepest(n=n))

@@ -148,7 +148,7 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
 
                 df = df.drop(t.columns, axis=1)
 
-                t[col] = orig[col]
+                t.loc[:, col] = orig.loc[:, col]
 
                 depths.append(_univariate_band_depth(data=t, curve=col, relax=relax, containment=cdef, J=J))
             
@@ -470,6 +470,9 @@ def _L1_depth(data: pd.DataFrame, points: pd.Index=None):
     return pd.Series(index=to_compute, data=1-np.array(depths))
 
 def _sample_L1_depth(data: pd.DataFrame, points: pd.Index=None, K=2):
+    """
+    Compute l1 depth using sampling
+    """
     n, d = data.shape 
     depths = []
     to_compute = data.index 
@@ -480,8 +483,17 @@ def _sample_L1_depth(data: pd.DataFrame, points: pd.Index=None, K=2):
     ss = n // K
 
     for point in to_compute:
+        sample = []
         c = data.copy()
 
         for _ in range(K):
-            t = data.sample(n=ss)
-            c.drop()
+            t = c.sample(n=ss, axis=0)
+            c = c.drop(t.index)
+            
+            if point not in t.index:
+                t = t.append(data.loc[point, :])
+            
+            sample.append(_L1_depth(data=t, points=[point]))
+        depths.append(np.mean(sample))
+        
+    return pd.Series(index=to_compute, data=depths)

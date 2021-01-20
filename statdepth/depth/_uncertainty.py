@@ -29,6 +29,7 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
     ----------
     pd.Series: Depth values for each function (column)
     """
+    # Dont use f1 for both x and mu, use curve because that's what we're interested in 
 
     if strict:
         sym = '*'
@@ -50,8 +51,8 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
             f1 = seq[0]
             f2 = seq[1]
             for time in data.index:
-                p1 = _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma.loc[time, f1])
-                p2 = _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma.loc[time, f2])
+                p1 = _norm_cdf(data.loc[time, f1], data.loc[time, curve], sigma.loc[time, f1])
+                p2 = _norm_cdf(data.loc[time, f2], data.loc[time, curve], sigma.loc[time, f2])
 
                 if strict:
                     d *= p1 + p2 - 2 * p1 * p2
@@ -65,9 +66,9 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
             f1, f_2, f_3 = seq[0], seq[1], seq[2]
 
             for time in data.index:
-                p1 = _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma.loc[time, f1])
-                p2 = _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma.loc[time, f2])
-                p3 = _norm_cdf(data.loc[time, f3], data.loc[time, f3], sigma.loc[time, f3])
+                p1 = _norm_cdf(data.loc[time, f1], data.loc[time, curve], sigma.loc[time, f1])
+                p2 = _norm_cdf(data.loc[time, f2], data.loc[time, curve], sigma.loc[time, f2])
+                p3 = _norm_cdf(data.loc[time, f3], data.loc[time, curve], sigma.loc[time, f3])
                 
                 if strict:
                     d *= p1 + p2 + p3 - p1 * p2 - p2*p3 - p1*p3

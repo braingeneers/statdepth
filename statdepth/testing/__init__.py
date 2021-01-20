@@ -1,2 +1,3 @@
 from ._generating import generate_noisy_pointcloud
 from ._generating import generate_noisy_univariate
+from ._generating import generate_noisy_multivariate

@@ -5,7 +5,7 @@ This README will now mostly be development information. For information about ho
 
 # Development
 
-To set up the development environment, run
+To set up the development environment as a Conda env, run
 ```
 conda env create --file environment.yml
 ```
@@ -14,6 +14,11 @@ To install locally, run
 
 ```
 pip install .
+```
+
+Or to install directly from this repo,
+```
+pip install git+https://github.com/braingeneers/functional_depth_methods
 ```
 
 This code is written in Python, with most methods written in [Numpy](https://numpy.org/). It also uses [numba](https://numba.pydata.org/), a high performance Python compiler. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN, so this should remove any speed issues Python has. 

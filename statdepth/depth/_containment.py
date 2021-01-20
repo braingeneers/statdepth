@@ -123,9 +123,8 @@ def _simplex_containment(data: List[pd.DataFrame], curve: pd.DataFrame, relax: b
     """
 
     n = len(data)
-    l, d = data[0].shape
+    l, _ = data[0].shape
     
-    # Iterate over our subsequences of functions to form simplex with d+1 vertices
     containment = 0
 
     # For each time index, check containment 
@@ -153,7 +152,6 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     ----------
     bool: True if point is contained in the simplex, False otherwise
     """
-
     # Check if the vector x (point) can be written as a 
     # convex combination of x_1,...,x_n (simplex_points), i.e.
     # x = a_1x_1+...+a_nx_n such that a_i >=0, a_1+...+a_n = 1.
@@ -170,7 +168,7 @@ def _is_in_simplex(simplex_points: pd.DataFrame, point: pd.Series) -> bool:
     
     # This barely ever errors, but when it does the problem is infeasible so let's assume
     # There is no containment
-    try:    
+    try:
         lp = linprog(c, A_eq=A, b_eq=b)
     except:
         warnings.warn('Simplex computation failed. Assuming False')

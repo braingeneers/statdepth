@@ -56,7 +56,6 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
         # In the case of simplex containment in R2 for f: R --> R, the simplices of 2 points degenerate to 
         # intervals, which is equivalent to the standard containment on R2. Maybe warn user?
         if containment == 'simplex':
-            # print('Simplex containment for real-valued functions is degenerate, and equivalent to standard interval containment (containment=\'r2\'). Falling back to interval containment.')
             cdef = _r2_containment
 
         band_depths = []
@@ -132,6 +131,9 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
 
         orig = df.copy()
         ss = df.shape[1] // K
+
+        if ss == 0:
+            raise DepthDegeneracy(f'Block size {K} is too large, not enough curves to sample.')
         
         if containment == 'simplex':
             cdef = _r2_containment
@@ -332,19 +334,12 @@ def _simplex_depth(data: List[pd.DataFrame], curve: pd.DataFrame, J=2, relax=Fal
     n = len(data)
     depth = 0
     
-    # TODO: Wait, do I need J here??
-    # for j in range(2, J + 1):
-    S_nj = 0
     subseq = _subsequences([i for i in range(n)], d + 1)
-    
+
     for seq in subseq:
         cdata = [data[i] for i in seq]
-        S_nj += _simplex_containment(data=data, curve=curve, relax=relax)
-    
-    # Probably wrong too... 
-    depth += S_nj / binom(n, d + 1)
-
-    return depth
+        depth += _simplex_containment(data=cdata, curve=curve, relax=relax)
+    return depth / binom(n, d + 1)
 
 def _pointwisedepth(data: pd.DataFrame, points: Union[list, pd.Index]=None, containment='simplex') -> pd.Series:
     """
@@ -475,4 +470,18 @@ def _L1_depth(data: pd.DataFrame, points: pd.Index=None):
     return pd.Series(index=to_compute, data=1-np.array(depths))
 
 def _sample_L1_depth(data: pd.DataFrame, points: pd.Index=None, K=2):
-    pass
+    n, d = data.shape 
+    depths = []
+    to_compute = data.index 
+
+    if points is not None:
+        to_compute = points 
+
+    ss = n // K
+
+    for point in to_compute:
+        c = data.copy()
+
+        for _ in range(K):
+            t = data.sample(n=ss)
+            c.drop()

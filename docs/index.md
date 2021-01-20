@@ -155,7 +155,7 @@ For a function f, this is done by
 2. Computing band depth of f with respect to each block
 3. Returning the average of these
 
-For K << n, this should approximate the band depth well. 
+For K << n, this should approximate the band depth well. This will have a higher space complexity because the data needs to be copied K times. 
 
 ## 5.1: FunctionalDepth
 

@@ -3,6 +3,7 @@ from typing import Callable, List, Union, Dict
 import plotly.graph_objects as go
 
 from ._depthcalculations import _banddepth, _samplebanddepth, _pointwisedepth, _samplepointwisedepth, DepthDegeneracy
+from ._uncertainty import _uncertain_depth, _sampleuncertaindepth
 from .abstract import AbstractDepth
 
 # Private class that wraps the band depth calculation methods with some extra attributes as well
@@ -198,9 +199,13 @@ def PointcloudDepth(data: pd.DataFrame, points: pd.Index=None, K=None, containme
     
     return _PointwiseDepth(df=data, depths=depth)
 
-def ProbabilisticDepth(data: pd.DataFrame):
-    pass
+def ProbabilisticDepth(data: pd.DataFrame, sigma2: pd.DataFrame, K=None, J: int=2, relax: bool=False):
+    if K is not None:
+        depth = _sampleuncertaindepth(data=data, sigma2=sigma2, K=K, J=J, relax=relax)
+    else:
+        depth = _uncertain_depth(data=data, sigma2=sigma2, J=J, relax=relax)
 
+    return _FunctionalDepthSeries(df=data, depths=depth)
 
 # Wraps FunctionalDepth classes in a function, because we need to compute depths before we pass down to the class
 def FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 

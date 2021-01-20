@@ -11,7 +11,7 @@ def _norm_cdf(x: np.array, mu: float, sigma: float):
     """
     return 0.5 * (1 + erf(x - mu) / (sigma * np.sqrt(2)))
 
-def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2, strict=False):
+def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2, relax=False):
     """
     Calculate uncertain depth for the given curve, assuming each entry in our data comes from a normal distribution 
     where the mean is the observed value and the variance is the corresponding entry in sigma2.
@@ -31,10 +31,10 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
     """
     # Dont use f1 for both x and mu, use curve because that's what we're interested in 
 
-    if strict:
-        sym = '*'
-    else:
-        sym = '+'
+    # if relax:
+    #     sym = '*'
+    # else:
+    #     sym = '+'
 
     n, p = data.shape
     depth = 0
@@ -54,7 +54,7 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
                 p1 = _norm_cdf(data.loc[time, f1], data.loc[time, curve], sigma.loc[time, f1])
                 p2 = _norm_cdf(data.loc[time, f2], data.loc[time, curve], sigma.loc[time, f2])
 
-                if strict:
+                if relax:
                     d *= p1 + p2 - 2 * p1 * p2
                 else: 
                     d += p1 + p2 - 2 * p1 * p2
@@ -70,7 +70,7 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
                 p2 = _norm_cdf(data.loc[time, f2], data.loc[time, curve], sigma.loc[time, f2])
                 p3 = _norm_cdf(data.loc[time, f3], data.loc[time, curve], sigma.loc[time, f3])
                 
-                if strict:
+                if relax:
                     d *= p1 + p2 + p3 - p1 * p2 - p2*p3 - p1*p3
                 else:
                     d += p1 + p2 + p3 - p1 * p2 - p2*p3 - p1*p3
@@ -79,7 +79,7 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
     else: # Handle J=4 later, not sure about computation
         pass
 
-    return depth / binom(data.shape[1], J) if strict else depth / binom(data.shape[1], J) * n / p # Because in the nonstrict case we are summing 1/|D| n times
+    return depth / binom(data.shape[1], J) if relax else depth / binom(data.shape[1], J) * n / p # Because in the nonrelax case we are summing 1/|D| n times
 
 # def _gen_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2):
 #     n, p = data.shape
@@ -107,7 +107,7 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
 
 
 
-def uncertain_depth(data: pd.DataFrame, sigma2: pd.DataFrame, J: int=2, strict=True):
+def _uncertain_depth(data: pd.DataFrame, sigma2: pd.DataFrame, J: int=2, relax=True):
     """
     Calculate probabilistic depth for each function (column) in the given data. 
     """
@@ -116,3 +116,6 @@ def uncertain_depth(data: pd.DataFrame, sigma2: pd.DataFrame, J: int=2, strict=T
     for col in data:
         depths.append(_uncertain_depth_univariate(data=data, curve=col, sigma2=sigma2, J=J))
     return pd.Series(index=data.columns, data=depths)
+
+def _sampleuncertaindepth(data: pd.DataFrame, sigma2: pd.DataFrame, K: int=2, J: int=2, relax=True):
+    pass

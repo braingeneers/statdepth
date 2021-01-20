@@ -157,8 +157,9 @@ For a function f, this is done by
 
 For K << n, this should approximate the band depth well. This will have a higher space complexity because the data needs to be copied K times. 
 
-## 5.1: FunctionalDepth
+## 5.1: statdepth
 
+#### 5.1.1: FunctionalDepth
 Calculate depth of univariate or multivariate functional data. See Examples.
 
 ```Python
@@ -203,7 +204,7 @@ Visualizations:
 - `plot_outlying(n=1)`: Plot all curves with the `n` outyling marked in red
 </font>
 
-## 5.2: PointcloudDepth
+#### 5.1.2: PointcloudDepth
 
 Compute pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
 only compute depth for the given points (should be a subset of data.index)
@@ -248,4 +249,117 @@ Visualizations:
 - `plot_distribution(invert_colors=False)`: Alias for `plot_depths()`  
 </font>
 
-## 5.3: Probabilistic Depth
+### 5.1.3: ProbabilisticDepth
+
+Calculate depth of univariate functional data with respect to variances for each observed datapoint. See Examples.
+
+```Python
+ProbabilisticDepth(data: pd.DataFrame, sigma2: pd.DataFrame, K=None, J=2, relax=False)
+```
+
+Parameters:  
+* data : pd.DataFrame 
+   * Functions to calculate band depth from 
+* sigma2: pd.DataFrame
+   * DataFrame of variances, should be the same size as data
+* K=2:
+   * Number of blocks to compute sample depth with. 
+* J: int (default=2) 
+   * J parameter in the band depth calculation. J=3 can be   computationally expensive for large datasets, and also does not have a closed form solution.   
+* relax: bool  
+   * If True, use a strict definition of containment, else use containment defined by the proportion of time the curve is in the band. 
+
+Returns:
+   * pd.Series
+      * Depth values for each univariate function.
+      
+Analytic methods:
+<font size="4">
+- `ordered(ascending=False)`: Sort the curves by their band depth 
+- `deepest(n=1)`: Return the `n` deepest curves
+- `outlying(n=1)`: Return the `n` most outlying curves
+- `drop_outlying_data(n=1)`: Return the original data with the `n` most outlying curves dropped
+- `get_deep_data(n=1)`: Return the `n` deepest curves from the original data
+- `get_depths()`: Return the depths in the order of the original columns
+- `get_data()`: Return the original data passed 
+- `sorted(ascending=False)`: Alias for ordered()
+- `median()`: Alias for `deepest(n=1)`
+</font>
+
+Visualizations:
+<font size="4">
+- `plot_deepest(n=1)`: Plot all the curves with the `n` deepest marked in red
+- `plot_outlying(n=1)`: Plot all curves with the `n` outyling marked in red
+</font>
+
+## 5.2: statdepth.testing 
+
+#### 5.2.1: generate_noisy_univariate
+Generate n univariate functions that are equal to the given data plus some random pertubations. 
+Should be used for testing / understanding other methods in this library.
+
+```Python
+generate_noisy_univariate(data: Union[list, np.array]=None, n: int=20, columns=None, index=None)
+```
+
+Parameters:
+* data: list or np.array
+   * 1d list of numbers to generate noisy data from. If None, sample from normal distribution over [0,1].
+* n: (default=20)
+   * Number of noisy functions to generate.
+* columns: (default=None)
+   * Names of columns. 
+* index: (default=None)
+   * Index to use.
+
+Returns:    
+* pd.DataFrame: 
+   * n x p DataFrame of p real valued functions observed at n discrete time * points. (So each column is a function)
+
+#### 5.2.2: generate_noisy_multivariate
+Generate num_curves noisy multivariate functions with d features observed at n time points. 
+Should be used for testing / understanding other methods in this library.
+
+```Python
+generate_noisy_multivariate(data: pd.DataFrame=None, num_curves: int=5, n: int=10, d: int=3, columns=None, index=None)
+```
+
+Parameters:
+* data: list or np.array
+   * 1d list of numbers to generate noisy data from. 
+* num_curves: (default=5)
+   * Number of multivariate functions to generate.
+* n: (default=10)
+   * Number of timepoints.
+* d: (default=3)
+   * Number of features (columns) our multivariate functions. This is the dimension of the image. 
+* columns: (default=None)
+   * Names of columns. 
+* index: (default=None)
+   * Index to use.
+
+Returns:    
+* List[pd.DataFrame]: 
+   * A list of num_curves multivariate functions (DataFrames)
+
+#### 5.2.3: generate_noisy_pointcloud
+
+Generate n d-dimensional points from the normal distribution over [0,1]
+
+```Python
+generate_noisy_pointcloud(n: int=50, d: int=2, columns=None, index=None)
+```
+
+Parameters:
+* n: (default=20)
+   * Number of points to generate.
+* d: (default=2)
+   * Dimension to draw points from.
+* columns: (default=None)
+   * Names of columns. 
+* index: (default=None)
+   * Index to use.
+
+Returns:
+* pd.DataFrame: 
+   * Generated noisy data

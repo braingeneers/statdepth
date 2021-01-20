@@ -51,7 +51,7 @@ def generate_noisy_multivariate(data: pd.DataFrame=None, num_curves: int=5, n: i
     -----------
     data: list or np.array
         1d list of numbers to generate noisy data from. 
-    l: (default=5)
+    num_curves: (default=5)
         Number of multivariate functions to generate.
     n: (default=10)
         Number of timepoints.
@@ -64,7 +64,7 @@ def generate_noisy_multivariate(data: pd.DataFrame=None, num_curves: int=5, n: i
 
     Returns:    
     ---------
-    List[pd.DataFrame]: A list of l multivariate functions (DataFrames)
+    List[pd.DataFrame]: A list of num_curves multivariate functions (DataFrames)
 
     """
     fs = []

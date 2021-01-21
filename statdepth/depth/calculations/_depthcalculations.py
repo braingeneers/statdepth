@@ -16,7 +16,7 @@ from ._containment import _r2_containment, _r2_enum_containment, _simplex_contai
 class DepthDegeneracy(Exception):
     pass
 
-def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
+def _banddepth(data: List[pd.DataFrame], to_compute: Union[list, pd.Index]=None, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the band depth for a set of functional curves.
 
@@ -30,6 +30,8 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
     ----------
     data : list of DataFrames
         Functions to calculate band depth from
+    to_compute: list of DataFrame, DataFrame, or pd.Index
+        Data to compute depths of. If None, compute depth of all samples. 
     J: int (default=2)
         J parameter in the band depth calculation. J=3 can be computationally expensive for large datasets, and also does not have a closed form solution. 
     containment: Callable or string (default='r2')
@@ -53,16 +55,18 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
     cdef = _select_containment(containment=containment)
     # If only one item in the list, it is the real-valued case (by assumption)
     if len(data) == 1:
-        # In the case of simplex containment in R2 for f: R --> R, the simplices of 2 points degenerate to 
-        # intervals, which is equivalent to the standard containment on R2. Maybe warn user?
         if containment == 'simplex':
             cdef = _r2_containment
 
+            
         band_depths = []
         df = data[0]
+        cols = df.columns
 
+        if to_compute is not None:
+            cols = to_compute
         # Calculate band depth for each sample (column)
-        for col in df.columns:
+        for col in cols:
             band_depths.append(_univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
 
         # Return a series indexed by our samples
@@ -74,16 +78,21 @@ def _banddepth(data: List[pd.DataFrame], J=2, containment='r2', relax=False, dee
             # Get 'index' of functions, which are just their indices in the list
             f = [i for i in range(len(data))]
 
+            if to_compute is not None:
+                f = to_compute
+
+            data_to_compute = [data[i] for i in f]
+
             # Compute band depth for each function (DataFrame)
-            for cdf in data:
-                cdata = [df for df in data if df is not cdf]
+            for cdf in data_to_compute:
+                cdata = [df for df in data_to_compute if df is not cdf]
                 depths.append(_simplex_depth(data=cdata, curve=cdf, J=J, relax=relax))
                 
             depths = pd.Series(index=f, data=depths)
     
     return depths
 
-def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
+def _samplebanddepth(data: List[pd.DataFrame], K: int, to_compute: Union[list, pd.Index]=None, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the sample band depth for a set of functional curves.
 
@@ -98,6 +107,8 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
     ----------
     data: list of DataFrames
         Functions to calculate band depth from
+    to_compute: list of DataFrame, DataFrame, or pd.Index
+        Data to compute depths of. If None, compute depth of all samples. 
     K: int 
         Computes band depth by averaging band depth across K blocks of our original curves 
     J: int (default=2)
@@ -128,8 +139,12 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, J=2, containment='r2', re
     # Univariate case
     if len(data) == 1:
         df = data[0]
+        cols = df.columns
 
-        orig = df.copy()
+        if to_compute is not None:
+            cols = to_compute
+
+        orig = df[[to_compute]]
         ss = df.shape[1] // K
 
         if ss == 0:

@@ -216,17 +216,17 @@ def ProbabilisticDepth(data: pd.DataFrame, sigma2: pd.DataFrame, K=None, J: int=
     return _FunctionalDepthSeries(df=data, depths=depth)
 
 # Wraps FunctionalDepth classes in a function, because we need to compute depths before we pass down to the class
-def FunctionalDepth(data: List[pd.DataFrame], K=None, J=2, 
+def FunctionalDepth(data: List[pd.DataFrame], to_compute=None, K=None, J=2, 
 containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthUnivariate, _FunctionalDepthMultivariateDataFrame]:   
 
     # Compute band depth completely or sample band depth
     if K is not None:
-        depth = _samplebanddepth(data=data, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
+        depth = _samplebanddepth(data=data, to_compute=to_compute, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
     else:
-        depth = _banddepth(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
+        depth = _banddepth(data=data, to_compute=to_compute, J=J, containment=containment, relax=relax, deep_check=deep_check)
 
     # Return the appropriate class
-    if isinstance(depth, pd.DataFrame): #Will only happen in multivariate case anyways
+    if isinstance(depth, pd.DataFrame): 
         return _FunctionalDepthMultivariateDataFrame(depths=depth)
     elif len(data) == 1: # Univariate case (by assumption)
         return _FunctionalDepthUnivariate(df=data[0], depths=depth)

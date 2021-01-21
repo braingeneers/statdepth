@@ -2,8 +2,8 @@ import pandas as pd
 from typing import Callable, List, Union, Dict
 import plotly.graph_objects as go
 
-from ._depthcalculations import _banddepth, _samplebanddepth, _pointwisedepth, _samplepointwisedepth, DepthDegeneracy
-from ._uncertainty import _uncertain_depth, _sampleuncertaindepth
+from .calculations._depthcalculations import _banddepth, _samplebanddepth, _pointwisedepth, _samplepointwisedepth, DepthDegeneracy
+from .calculations._uncertainty import _uncertain_depth, _sampleuncertaindepth
 from .abstract import AbstractDepth
 
 # Private class that wraps the band depth calculation methods with some extra attributes as well

@@ -65,12 +65,13 @@ def _banddepth(data: List[pd.DataFrame], to_compute: Union[list, pd.Index]=None,
 
         if to_compute is not None:
             cols = to_compute
+        
         # Calculate band depth for each sample (column)
         for col in cols:
             band_depths.append(_univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
 
         # Return a series indexed by our samples
-        depths = pd.Series(index=df.columns, data=band_depths)
+        depths = pd.Series(index=cols, data=band_depths)
     else: # Multivariate case
         if containment == 'simplex':
             depths = []

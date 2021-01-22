@@ -54,6 +54,9 @@ class _FunctionalDepthSeries(AbstractDepth, pd.Series):
     def get_data(self):
         return self._orig_data
 
+    def depths(self):
+        return self.get_depths()
+
 class _FunctionalDepthMultivariateDataFrame(AbstractDepth, pd.DataFrame):
     # Don't copy over all the data. Numpy arrays might be large and this will add extra space complexity
     # Also, visualization for multivariate functions isn't extensive enough to justify 

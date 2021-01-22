@@ -224,9 +224,24 @@ containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries
 
     # Compute band depth completely or sample band depth
     if K is not None:
-        depth = _samplebanddepth(data=data, to_compute=to_compute, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
+        depth = _samplebanddepth(
+            data=data, 
+            to_compute=to_compute, 
+            K=K, 
+            J=J, 
+            containment=containment, 
+            relax=relax, 
+            deep_check=deep_check
+        )
     else:
-        depth = _banddepth(data=data, to_compute=to_compute, J=J, containment=containment, relax=relax, deep_check=deep_check)
+        depth = _banddepth(
+            data=data, 
+            to_compute=to_compute, 
+            J=J, 
+            containment=containment, 
+            relax=relax, 
+            deep_check=deep_check
+        )
 
     # Return the appropriate class
     if isinstance(depth, pd.DataFrame): 

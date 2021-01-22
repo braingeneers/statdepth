@@ -16,7 +16,14 @@ from ._containment import _r2_containment, _r2_enum_containment, _simplex_contai
 class DepthDegeneracy(Exception):
     pass
 
-def _banddepth(data: List[pd.DataFrame], to_compute: Union[list, pd.Index]=None, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
+def _banddepth(
+    data: List[pd.DataFrame], 
+    to_compute: Union[list, pd.Index]=None, 
+    J=2, 
+    containment='r2', 
+    relax=False, 
+    deep_check=False
+) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the band depth for a set of functional curves.
 
@@ -93,7 +100,15 @@ def _banddepth(data: List[pd.DataFrame], to_compute: Union[list, pd.Index]=None,
     
     return depths
 
-def _samplebanddepth(data: List[pd.DataFrame], K: int, to_compute: Union[list, pd.Index]=None, J=2, containment='r2', relax=False, deep_check=False) -> Union[pd.Series, pd.DataFrame]:
+def _samplebanddepth(
+    data: List[pd.DataFrame], 
+    K: int, 
+    to_compute: Union[list, pd.Index]=None, 
+    J=2, 
+    containment='r2', 
+    relax=False, 
+    deep_check=False
+) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the sample band depth for a set of functional curves.
 
@@ -185,7 +200,13 @@ def _samplebanddepth(data: List[pd.DataFrame], K: int, to_compute: Union[list, p
         
     return samples
 
-def _handle_depth_errors(data: List[pd.DataFrame], J: int, containment: Union[Callable, str], relax: bool, deep_check: bool) -> None:
+def _handle_depth_errors(
+    data: List[pd.DataFrame], 
+    J: int, 
+    containment: Union[Callable, str], 
+    relax: bool, 
+    deep_check: bool
+) -> None:
     """
     Handles errors in band depth methods.
 

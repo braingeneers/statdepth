@@ -3,7 +3,9 @@ import numpy as np
 from typing import List, Union
 from scipy.special import erf, binom
 
-from ._depthcalculations import _subsequences
+from ._functional import _subsequences
+
+from ._helper import *
 
 def _norm_cdf(x: np.array, mu: float, sigma: float):
     """

@@ -1,4 +1,3 @@
-from itertools import combinations
 from typing import Callable, Union, List
 from inspect import signature
 import warnings 
@@ -11,6 +10,7 @@ from numba import jit
 from scipy.special import comb, binom
 from scipy.optimize import linprog
 
+from ._helper import *
 # This is not a solution I like, but I don't want to spam the user with
 # warnings when simplex containment is used, because linprog() is very whiny
 np.testing.suppress_warnings()

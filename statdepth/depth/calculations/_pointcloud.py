@@ -48,6 +48,10 @@ def _pointwisedepth(data: pd.DataFrame, points: Union[list, pd.Index]=None, cont
             depths.append(S_nj / binom(n, d + 1))
     elif containment == 'l1':
         return _L1_depth(data=data, points=points)
+    elif containment='mahalanobis':
+        return _mahalanobis_depth(data=data, to_compute=points)
+    elif containment='oja':
+        return _oja_depth(data=data, to_compute=points)
     else: # Probably will be more in the future 
         pass
 
@@ -89,14 +93,13 @@ def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, contai
     ss = n // K 
 
     # Compute sample depth of each point, should be containment agnostic
-    # Since the computation is being done in _pointwisedepth
+    # Since the computation is being done in _pointwisedepth, which will call the appropriate depth measure
     for time in to_compute:
         cd = []
         for _ in range(ss):
             sdata = data.sample(n=ss, axis=0)
             
             # If our current datapoint isnt in the sampled data, just append it since we need to sample it 
-            # for _is_in_simplex()
             if not time in sdata.index:
                 sdata = sdata.append(data.loc[time, :])
                 
@@ -134,31 +137,54 @@ def _L1_depth(data: pd.DataFrame, points: pd.Index=None):
         
     return pd.Series(index=to_compute, data=1-np.array(depths))
 
-def _sample_L1_depth(data: pd.DataFrame, points: pd.Index=None, K=2):
-    """
-    Compute l1 depth using sampling
-    """
-    n, d = data.shape 
+def _mahalanobis_depth(data: pd.DataFrame, to_compute=None):
+    n, p = data.shape
+    if n != p:
+        raise ValueError('Mahalanobis depth requires equal number of dimensions and datapoints.')
+        
+    mu = data.mean()
+    inv_cov = np.linalg.inv(np.cov(data, rowvar=True))
+    idx = data.index
+    
+    if to_compute is not None:
+        idx = to_compute
+        
     depths = []
-    to_compute = data.index 
+    
+    for point in idx:
+        x = data.loc[point, :]
+        S_x = np.dot(inv_cov, x)
+        
+        depths.append(np.dot((x-mu).T, S_x))
+    return pd.Series(index=idx, data=depths)
 
-    if points is not None:
-        to_compute = points 
+def _oja_depth(data: pd.DataFrame, to_compute: list=None) -> pd.Series:
+    """Oja depth for n multivariate samples in R^p. Data should be an n x p matrix."""
+    n, d = data.shape
+    idx = data.index
+    depths = []
+    
+    if to_compute is not None:
+        idx = to_compute
+    
+    try:
+        vol_conv_p = ConvexHull(data).volume
+    except:
+        raise DepthDegeneracy('Too many collinear points to compute depth of convex hull spanned by data. Try another depth method or remove collinearities.')
+        
+    for point in idx:
+        ci = list(idx)
+        ci.remove(point)
+        subseq = _subsequences(ci, d)
 
-    ss = n // K
+        cd = 0
+        for seq in subseq:
+            try:
+                hull = ConvexHull(data.loc[seq, :].append(data.loc[point, :]))
+                cd += hull.volume
+            except:
+                raise DepthDegeneracy(f'Too many collinear points for data sampled at point {point}, will get a low depth score. Continuing...')
 
-    for point in to_compute:
-        sample = []
-        c = data.copy()
-
-        for _ in range(K):
-            t = c.sample(n=ss, axis=0)
-            c = c.drop(t.index)
-            
-            if point not in t.index:
-                t = t.append(data.loc[point, :])
-            
-            sample.append(_L1_depth(data=t, points=[point]))
-        depths.append(np.mean(sample))
+        depths.append(cd / vol_conv_p)
         
     return pd.Series(index=to_compute, data=depths)

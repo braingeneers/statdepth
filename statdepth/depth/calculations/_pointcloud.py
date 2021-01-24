@@ -7,7 +7,7 @@ from scipy.special import binom
 
 __all__ = ['_pointwisedepth', '_samplepointwisedepth']
 
-def _pointwisedepth(data: pd.DataFrame, points: Union[list, pd.Index]=None, containment='simplex') -> pd.Series:
+def _pointwisedepth(data: pd.DataFrame, to_compute: Union[list, pd.Index]=None, containment='simplex') -> pd.Series:
     """
     Compute pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
     only compute depth for the given points (should be a subset of data.index)
@@ -28,10 +28,9 @@ def _pointwisedepth(data: pd.DataFrame, points: Union[list, pd.Index]=None, cont
     """
     n, d = data.shape
     depths = []
-    to_compute = data.index
 
-    if points is not None:
-        to_compute = points
+    if to_compute is None:
+        to_compute = data.index 
 
     if containment == 'simplex':
         for time in to_compute:
@@ -47,17 +46,17 @@ def _pointwisedepth(data: pd.DataFrame, points: Union[list, pd.Index]=None, cont
                 
             depths.append(S_nj / binom(n, d + 1))
     elif containment == 'l1':
-        return _L1_depth(data=data, points=points)
-    elif containment='mahalanobis':
-        return _mahalanobis_depth(data=data, to_compute=points)
-    elif containment='oja':
-        return _oja_depth(data=data, to_compute=points)
+        return _L1_depth(data=data, to_compute=to_compute)
+    elif containment == 'mahalanobis':
+        return _mahalanobis_depth(data=data, to_compute=to_compute)
+    elif containment == 'oja':
+        return _oja_depth(data=data, to_compute=to_compute)
     else: # Probably will be more in the future 
         pass
 
     return pd.Series(index=to_compute, data=depths)
 
-def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, containment='simplex'):
+def _samplepointwisedepth(data: pd.DataFrame, to_compute: pd.Index=None, K=2, containment='simplex'):
     """
     Compute sample pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
     only compute depth for the given points (should be a subset of data.index)
@@ -81,14 +80,14 @@ def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, contai
 
     # If K=1, don't bother splitting the data. Just return regular depth. 
     if K == 1:
-        return _pointwisedepth(data=data, points=points, containment=containment)
+        return _pointwisedepth(data=data, to_compute=to_compute, containment=containment)
 
     n, d = data.shape 
-    to_compute = data.index 
     depths = []
-    if points is not None:
-        to_compute = points 
-    
+
+    if to_compute is None:
+        to_compute = data.index 
+
     # K blocks of points (indices)
     ss = n // K 
 
@@ -103,30 +102,28 @@ def _samplepointwisedepth(data: pd.DataFrame, points: pd.Index=None, K=2, contai
             if not time in sdata.index:
                 sdata = sdata.append(data.loc[time, :])
                 
-            cd.append(_pointwisedepth(data=sdata, points=[time], containment=containment))
+            cd.append(_pointwisedepth(data=sdata, to_compute=[time], containment=containment))
         depths.append(np.mean(cd))
-        
+    
     return pd.Series(index=to_compute, data=depths)
 
-def _L1_depth(data: pd.DataFrame, points: pd.Index=None):
+def _L1_depth(data: pd.DataFrame, to_compute: pd.Index=None):
     """
     Computes L1 data depth of the given points. 
     """
     n, d = data.shape
     depths = []
-
-    to_compute = data.index
     idx = list(data.index)
 
-    if points is not None:
-        to_compute = points
+    if to_compute is None:
+        to_compute = idx
     
     for point in to_compute:
         sum_e = 0
         vec = data.loc[point, :]
 
         # Ugly code, but faster than 
-        # Computing data.drop(point).index each time :shrug:
+        # Computing data.drop(point).index each time point
         cidx = idx[:]
         cidx.remove(point)
 
@@ -138,6 +135,7 @@ def _L1_depth(data: pd.DataFrame, points: pd.Index=None):
     return pd.Series(index=to_compute, data=1-np.array(depths))
 
 def _mahalanobis_depth(data: pd.DataFrame, to_compute=None):
+    """Mahalanobis depth for n points in R^n. Matrix must be square since we need to multiply the inv(covariance(data)).x for each point x."""
     n, p = data.shape
     if n != p:
         raise ValueError('Mahalanobis depth requires equal number of dimensions and datapoints.')

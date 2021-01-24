@@ -63,14 +63,14 @@ def FunctionalHomogeneity(
         G_deepest = G[G_depths.index[0]] # Get deepest dataframe in G
 
         F.append(G_deepest)
-        G_deep_in_F = FunctionalDepth(F, to_compute=[len(F) - 1], K, J, containment, relax, deep_check).ordered().iloc[0]
+        G_deep_in_F = FunctionalDepth(F, to_compute=[len(F) - 1], K=K, J=J, containment=containment, relax=relax, deep_check=deep_check).ordered().iloc[0]
         F.pop(-1) # Remove G after we added it 
 
         if method == 'p1':
             return G_deep_in_F / G_depths.median().iloc[0]
         elif method == 'p2':
             F_depths = FunctionalDepth(F, K, J, containment, relax, deep_check)
-            reurn 1 - np.abs(G_deep_in_F - F_depths.median().iloc[0])
+            return 1 - np.abs(G_deep_in_F - F_depths.median().iloc[0])
         elif method == 'p3':
             pass
         else:
@@ -79,31 +79,30 @@ def FunctionalHomogeneity(
 
 
 def PointcloudHomogeneity(
-    F: List[pd.DataFrame], 
-    G: List[pd.DataFrame], 
+    F: pd.DataFrame, 
+    G: pd.DataFrame, 
     K=None, 
     J=2, 
-    containment='r2', 
+    containment='simplex', 
     method='p1', 
-    relax=False, 
-    deep_check=False
 ):
     _handle_errors(F, G, method) 
 
-    G_depths = PointcloudDepth(data=G, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
+    G_depths = PointcloudDepth(data=G, K=K, containment=containment)
     
     # Get deepest function in G
     G_deepest = G_depths.get_deep_data(n=1)
+    G_deepest.index = ['g_deepest']
 
     # Append this to F and calculate it's depth with respect to the other samples in F
-    F.loc['g_deepest', :] = G_deepest
-    G_deep_in_F = PointcloudDepth(F, to_compute=['g_deepest'], K=K, J=J, containment=containment, relax=relax, deep_check=deep_check).ordered().loc['g_deepest']
+    F = F.append(G_deepest)
+    G_deep_in_F = PointcloudDepth(F, to_compute=['g_deepest'], K=K, containment=containment).ordered().loc['g_deepest']
     F = F.drop('g_deepest', axis=0)
 
     if method == 'p1':
         return G_deep_in_F / G_depths.median().iloc[0]
     elif method == 'p2':
-        F_depths = PointcloudDepth(F, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
+        F_depths = PointcloudDepth(F, K=K, containment=containment)
         return 1 - np.abs(G_deep_in_F - F_depths.median().iloc[0])
     elif method == 'p3':
         t = []
@@ -111,7 +110,7 @@ def PointcloudHomogeneity(
         # Get the deepest curve of G in F
         for point in G.index:
             F.loc[point, :] = G.loc[point, :]
-            t.append(PointcloudDepth(F, to_compute=[point],  K=K, J=J, containment=containment, relax=relax, deep_check=deep_check).loc[point])
+            t.append(PointcloudDepth(F, to_compute=[point],  K=K, containment=containment).loc[point])
             F = F.drop(point, axis=0)
 
         # Sort depths of G in F
@@ -119,8 +118,8 @@ def PointcloudHomogeneity(
 
         return depths_G_in_F.iloc[0] / G_depths.median().iloc[0]
     elif method == 'p4':
-        t1 = np.abs(self.PointcloudHomogeneity(F, G, K, J, containment, 'p3', relax, deepcheck) - self.PointcloudHomogeneity(F, F, K, J, containment, 'p1', relax, deepcheck))
-        t2 = np.abs(self.PointcloudHomogeneity(F, G, K, J, containment, 'p3', relax, deepcheck) - self.PointcloudHomogeneity(G, G, K, J, containment, 'p1', relax, deepcheck))
+        t1 = np.abs(self.PointcloudHomogeneity(F, G, K, containment, 'p3') - self.PointcloudHomogeneity(F, F, K, containment, 'p1'))
+        t2 = np.abs(self.PointcloudHomogeneity(F, G, K, containment, 'p3') - self.PointcloudHomogeneity(G, G, K, containment, 'p1'))
         return t1 * t2
     else:
         raise ValueError(f'{method} is not a valid depth method for the given data. Use one of [\'p1\', \'p2\', \'p3\', \'p4\']')

@@ -53,8 +53,6 @@ def _functionaldepth(
     ----------
     pd.Series, pd.DataFrame: Depth values for each function.
     """
-    depths = pd.Series()
-
     # Handle common errors
     _handle_depth_errors(data=data, J=J, containment=containment, relax=relax, deep_check=deep_check)
 

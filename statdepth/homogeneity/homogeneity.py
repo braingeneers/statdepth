@@ -89,7 +89,8 @@ def PointcloudHomogeneity(
     _handle_errors(F, G, method) 
 
     G_depths = PointcloudDepth(data=G, K=K, containment=containment)
-    
+    F_depths = PointcloudDepth(F, K=K, containment=containment)
+
     # Get deepest function in G
     G_deepest = G_depths.get_deep_data(n=1)
     G_deepest.index = ['g_deepest']
@@ -100,9 +101,8 @@ def PointcloudHomogeneity(
     F = F.drop('g_deepest', axis=0)
 
     if method == 'p1':
-        return G_deep_in_F / G_depths.median().iloc[0]
+        return G_deep_in_F / F_depths.median().iloc[0] # Normalized value
     elif method == 'p2':
-        F_depths = PointcloudDepth(F, K=K, containment=containment)
         return 1 - np.abs(G_deep_in_F - F_depths.median().iloc[0])
     elif method == 'p3':
         t = []

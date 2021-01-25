@@ -3,8 +3,54 @@ import numpy as np
 from typing import List, Union
 
 from ..depth.depth import FunctionalDepth, PointcloudDepth
+from ..depth.abstract import AbstractDepth
 
-def FunctionalHomogeneity(
+# Helper class 
+class FunctionalHomogeneity:
+    def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False):
+        self._orig_F = F 
+        self._orig_G = G 
+        self._hom = FunctionalHomogeneity(
+            F=F,
+            G=G,
+            K=K,
+            J=J,
+            containment=containment,
+            method=method,
+            relax=relax,
+            deep_check=deep_check
+        )
+    
+    def __str__(self):
+        return self._hom 
+    
+    def homogeneity(self):
+        return self._hom 
+
+class PointcloudHomogeneity:
+    def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False):
+        self._orig_F = F 
+        self._orig_G = G 
+        self._F_depths, self._G_depths, self._hom  = _pointcloudhomogeneity(
+            F=F,
+            G=G,
+            K=K,
+            containment=containment,
+            method=method,
+            deep_check=deep_check
+        )
+    
+    def F_depths(self):
+        return self._F_depths
+    
+    def G_depths(self):
+        return self._G_depths
+
+    def homogeneity():
+        return self_.hom 
+    
+
+def _functionalhomogeneity(
     F: List[pd.DataFrame], 
     G: List[pd.DataFrame], 
     K=None, 
@@ -76,20 +122,18 @@ def FunctionalHomogeneity(
         else:
             raise ValueError(f'{method} is not a valid depth method for the given data. Use one of [\'p1\', \'p2\', \'p3\', \'p4\']')
 
-
-
-def PointcloudHomogeneity(
+def _pointcloudhomogeneity(
     F: pd.DataFrame, 
     G: pd.DataFrame, 
     K=None, 
-    J=2, 
     containment='simplex', 
     method='p1', 
 ):
     _handle_errors(F, G, method) 
 
     G_depths = PointcloudDepth(data=G, K=K, containment=containment)
-    F_depths = PointcloudDepth(F, K=K, containment=containment)
+    F_depths = PointcloudDepth(data=F, K=K, containment=containment)
+    hom = 0
 
     # Get deepest function in G
     G_deepest = G_depths.get_deep_data(n=1)
@@ -101,9 +145,9 @@ def PointcloudHomogeneity(
     F = F.drop('g_deepest', axis=0)
 
     if method == 'p1':
-        return G_deep_in_F / F_depths.median().iloc[0] # Normalized value
+        hom =  G_deep_in_F / F_depths.median().iloc[0] # Normalized value
     elif method == 'p2':
-        return 1 - np.abs(G_deep_in_F - F_depths.median().iloc[0])
+        hom = 1 - np.abs(G_deep_in_F - F_depths.median().iloc[0])
     elif method == 'p3':
         t = []
 
@@ -116,14 +160,15 @@ def PointcloudHomogeneity(
         # Sort depths of G in F
         depths_G_in_F = pd.Series(index=list(G.index), data=t).sort_values(ascending=False)
 
-        return depths_G_in_F.iloc[0] / G_depths.median().iloc[0]
+        hom = depths_G_in_F.iloc[0] / G_depths.median().iloc[0]
     elif method == 'p4':
-        t1 = np.abs(self.PointcloudHomogeneity(F, G, K, containment, 'p3') - self.PointcloudHomogeneity(F, F, K, containment, 'p1'))
-        t2 = np.abs(self.PointcloudHomogeneity(F, G, K, containment, 'p3') - self.PointcloudHomogeneity(G, G, K, containment, 'p1'))
-        return t1 * t2
+        t1 = np.abs(_pointcloudhomogeneity(F, G, K, containment, 'p3') - _pointcloudhomogeneity(F, F, K, containment, 'p1'))
+        t2 = np.abs(_pointcloudhomogeneity(F, G, K, containment, 'p3') - _pointcloudhomogeneity(G, G, K, containment, 'p1'))
+        hom = t1 * t2
     else:
         raise ValueError(f'{method} is not a valid depth method for the given data. Use one of [\'p1\', \'p2\', \'p3\', \'p4\']')
-
+    
+    return F_depths, G_depths, hom
 
 def _handle_errors(F: List[pd.DataFrame], G: List[pd.DataFrame], method='p1'):
     if len(F) != len(G):

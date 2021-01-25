@@ -4,6 +4,7 @@ from typing import Union, List
 from ._containment import _is_in_simplex
 from ._helper import *
 from scipy.special import binom 
+from scipy.spatial import ConvexHull
 
 __all__ = ['_pointwisedepth', '_samplepointwisedepth']
 
@@ -52,7 +53,7 @@ def _pointwisedepth(data: pd.DataFrame, to_compute: Union[list, pd.Index]=None, 
     elif containment == 'oja':
         return _oja_depth(data=data, to_compute=to_compute)
     else: # Probably will be more in the future 
-        pass
+        raise ValueError(f'{containment} is not a valid containment measure. ')
 
     return pd.Series(index=to_compute, data=depths)
 
@@ -137,6 +138,8 @@ def _L1_depth(data: pd.DataFrame, to_compute: pd.Index=None):
 def _mahalanobis_depth(data: pd.DataFrame, to_compute=None):
     """Mahalanobis depth for n points in R^n. Matrix must be square since we need to multiply the inv(covariance(data)).x for each point x."""
     n, p = data.shape
+
+    # I think? We have to multiply and nxn matrix by our point in R^p
     if n != p:
         raise ValueError('Mahalanobis depth requires equal number of dimensions and datapoints.')
         

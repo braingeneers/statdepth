@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 from statdepth import FunctionalDepth, PointcloudDepth
-
 from statdepth.testing import generate_noisy_univariate, generate_noisy_multivariate, generate_noisy_pointcloud 
 
 df = generate_noisy_univariate()

@@ -6,29 +6,29 @@ from ..depth.depth import FunctionalDepth, PointcloudDepth
 from ..depth.abstract import AbstractDepth
 
 # Helper class 
-class FunctionalHomogeneity:
-    def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False):
-        self._orig_F = F 
-        self._orig_G = G 
-        self._hom = FunctionalHomogeneity(
-            F=F,
-            G=G,
-            K=K,
-            J=J,
-            containment=containment,
-            method=method,
-            relax=relax,
-            deep_check=deep_check
-        )
+# class FunctionalHomogeneity:
+#     def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False):
+#         self._orig_F = F 
+#         self._orig_G = G 
+#         self._hom = FunctionalHomogeneity(
+#             F=F,
+#             G=G,
+#             K=K,
+#             J=J,
+#             containment=containment,
+#             method=method,
+#             relax=relax,
+#             deep_check=deep_check
+#         )
     
-    def __str__(self):
-        return self._hom 
+#     def __str__(self):
+#         return self._hom 
     
-    def homogeneity(self):
-        return self._hom 
+#     def homogeneity(self):
+#         return self._hom 
 
 class PointcloudHomogeneity:
-    def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False):
+    def __init__(self, F, G, method='p1', K=None, J=None, containment='simplex', relax=False, deep_check=False):
         self._orig_F = F 
         self._orig_G = G 
         self._F_depths, self._G_depths, self._hom  = _pointcloudhomogeneity(
@@ -37,7 +37,6 @@ class PointcloudHomogeneity:
             K=K,
             containment=containment,
             method=method,
-            deep_check=deep_check
         )
     
     def F_depths(self):
@@ -46,9 +45,14 @@ class PointcloudHomogeneity:
     def G_depths(self):
         return self._G_depths
 
-    def homogeneity():
-        return self_.hom 
+    def homogeneity(self):
+        return self._hom 
     
+    def __str__(self):
+        return str(self.homogeneity())
+    
+    def __repr__(self):
+        return str(self.homogeneity())    
 
 def _functionalhomogeneity(
     F: List[pd.DataFrame], 
@@ -57,7 +61,7 @@ def _functionalhomogeneity(
     J=2, 
     containment='r2', 
     method='p1', 
-    relax=False, 
+    relax=False,
     deep_check=False
 ):
     _handle_errors(F, G, method) 
@@ -100,9 +104,10 @@ def _functionalhomogeneity(
 
             return depths_G_in_F.iloc[0] / G_depths.median().iloc[0]
         elif method == 'p4':
-            t1 = np.abs(self.PointcloudHomogeneity(F, G, K, J, containment, 'p3', relax, deepcheck) - self.PointcloudHomogeneity(F, F, K, J, containment, 'p1', relax, deepcheck))
-            t2 = np.abs(self.PointcloudHomogeneity(F, G, K, J, containment, 'p3', relax, deepcheck) - self.PointcloudHomogeneity(G, G, K, J, containment, 'p1', relax, deepcheck))
-            return t1 * t2
+            pass
+            # t1 = np.abs(self.PointcloudHomogeneity(F, G, K, J, containment, 'p3', relax, deepcheck) - self.PointcloudHomogeneity(F, F, K, J, containment, 'p1', relax, deepcheck))
+            # t2 = np.abs(self.PointcloudHomogeneity(F, G, K, J, containment, 'p3', relax, deepcheck) - self.PointcloudHomogeneity(G, G, K, J, containment, 'p1', relax, deepcheck))
+            # return t1 * t2
         else:
             raise ValueError(f'{method} is not a valid depth method for the given data. Use one of [\'p1\', \'p2\', \'p3\', \'p4\']')
     else:

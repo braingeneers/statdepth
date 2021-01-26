@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd 
 from typing import Union, List
-from ._containment import _is_in_simplex
-from ._helper import *
 from scipy.special import binom 
 from scipy.spatial import ConvexHull
+
+from ._containment import _is_in_simplex
+from ._helper import *
 
 __all__ = ['_pointwisedepth', '_samplepointwisedepth']
 
@@ -187,5 +188,5 @@ def _oja_depth(data: pd.DataFrame, to_compute: list=None) -> pd.Series:
                 raise DepthDegeneracy(f'Too many collinear points for data sampled at point {point}, will get a low depth score. Continuing...')
 
         depths.append(cd / vol_conv_p)
-        
+
     return pd.Series(index=to_compute, data=depths)

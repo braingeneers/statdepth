@@ -88,12 +88,11 @@ def _functionaldepth(
                 f = to_compute
 
             data_to_compute = [data[i] for i in f]
-
+            
             # Compute band depth for each function (DataFrame)
             for cdf in data_to_compute:
-                cdata = [df for df in data_to_compute if df is not cdf]
+                cdata = [df for df in data if df is not cdf]
                 depths.append(_simplex_depth(data=cdata, curve=cdf, J=J, relax=relax))
-                
             depths = pd.Series(index=f, data=depths)
     
     return depths

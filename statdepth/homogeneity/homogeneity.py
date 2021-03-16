@@ -6,26 +6,32 @@ from ..depth.depth import FunctionalDepth, PointcloudDepth
 from ..depth.abstract import AbstractDepth
 
 # Helper class 
-# class FunctionalHomogeneity:
-#     def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False):
-#         self._orig_F = F 
-#         self._orig_G = G 
-#         self._hom = FunctionalHomogeneity(
-#             F=F,
-#             G=G,
-#             K=K,
-#             J=J,
-#             containment=containment,
-#             method=method,
-#             relax=relax,
-#             deep_check=deep_check
-#         )
+class FunctionalHomogeneity:
+    def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False):
+        self._orig_F = F 
+        self._orig_G = G 
+        self._hom = _functionalhomogeneity(
+            F=F,
+            G=G,
+            K=K,
+            J=J,
+            containment=containment,
+            method=method,
+            relax=relax,
+            deep_check=deep_check
+        )
     
-#     def __str__(self):
-#         return self._hom 
+    def __str__(self):
+        return self._hom 
     
-#     def homogeneity(self):
-#         return self._hom 
+    def homogeneity(self):
+        return self._hom 
+
+    def __str__(self):
+        return str(self.homogeneity())
+    
+    def __repr__(self):
+        return str(self.homogeneity())    
 
 class PointcloudHomogeneity:
     def __init__(self, F, G, method='p1', K=None, J=None, containment='simplex', relax=False, deep_check=False):

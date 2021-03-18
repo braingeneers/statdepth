@@ -207,7 +207,7 @@ class _PointwiseDepth(_FunctionalDepthSeries):
         self.plot_depths(invert_colors, marker)
 
 # Wraps the PointwiseDepth class in a function, because we need to compute depths before we pass down to the class
-def PointcloudDepth(data: pd.DataFrame, to_compute: pd.Index=None, K=None, containment='simplex') -> _PointwiseDepth:
+def PointcloudDepth(data: pd.DataFrame, to_compute: pd.Index=None, K=None, containment='simplex', quiet=True) -> _PointwiseDepth:
     if K is not None:
         depth = _samplepointwisedepth(data=data, to_compute=to_compute, K=K, containment=containment)
     else:
@@ -225,18 +225,19 @@ def ProbabilisticDepth(data: pd.DataFrame, sigma2: pd.DataFrame, K=None, J: int=
 
 # Wraps FunctionalDepth classes in a function, because we need to compute depths before we pass down to the class
 def FunctionalDepth(data: List[pd.DataFrame], to_compute=None, K=None, J=2, 
-containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries, _FunctionalDepthUnivariate, _FunctionalDepthMultivariateDataFrame]:   
+containment='r2', relax=False, deep_check=False, quiet=True) -> Union[_FunctionalDepthSeries, _FunctionalDepthUnivariate, _FunctionalDepthMultivariateDataFrame]:   
 
     # Compute band depth completely or sample band depth
     if K is not None:
         depth = _samplefunctionaldepth(
-            data=data, 
+            data=data,
             to_compute=to_compute, 
             K=K, 
             J=J, 
             containment=containment, 
             relax=relax, 
-            deep_check=deep_check
+            deep_check=deep_check,
+            quiet=quiet
         )
     else:
         depth = _functionaldepth(
@@ -245,7 +246,8 @@ containment='r2', relax=False, deep_check=False) -> Union[_FunctionalDepthSeries
             J=J, 
             containment=containment, 
             relax=relax, 
-            deep_check=deep_check
+            deep_check=deep_check,
+            quiet=quiet
         )
 
     # Return the appropriate class

@@ -3,13 +3,19 @@ import pandas as pd
 from typing import Union, List
 from scipy.special import binom 
 from scipy.spatial import ConvexHull
+from tqdm import tqdm
 
 from ._containment import _is_in_simplex
 from ._helper import *
 
 __all__ = ['_pointwisedepth', '_samplepointwisedepth']
 
-def _pointwisedepth(data: pd.DataFrame, to_compute: Union[list, pd.Index]=None, containment='simplex') -> pd.Series:
+def _pointwisedepth(
+    data: pd.DataFrame, 
+    to_compute: Union[list, pd.Index]=None, 
+    containment='simplex', 
+    quiet=True
+) -> pd.Series:
     """
     Compute pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
     only compute depth for the given points (should be a subset of data.index)
@@ -35,7 +41,7 @@ def _pointwisedepth(data: pd.DataFrame, to_compute: Union[list, pd.Index]=None, 
         to_compute = data.index 
 
     if containment == 'simplex':
-        for time in to_compute:
+        for time in tqdm(to_compute, disable=quiet):
             S_nj = 0
             
             point = data.loc[time, :]
@@ -58,7 +64,13 @@ def _pointwisedepth(data: pd.DataFrame, to_compute: Union[list, pd.Index]=None, 
 
     return pd.Series(index=to_compute, data=depths)
 
-def _samplepointwisedepth(data: pd.DataFrame, to_compute: pd.Index=None, K=2, containment='simplex'):
+def _samplepointwisedepth(
+    data: pd.DataFrame, 
+    to_compute: pd.Index=None, 
+    K=2, 
+    containment='simplex', 
+    quiet=True
+) -> pd.Series:
     """
     Compute sample pointwise depth for n points in R^p, where data is an nxp matrix of points. If points is not None,
     only compute depth for the given points (should be a subset of data.index)
@@ -95,9 +107,9 @@ def _samplepointwisedepth(data: pd.DataFrame, to_compute: pd.Index=None, K=2, co
 
     # Compute sample depth of each point, should be containment agnostic
     # Since the computation is being done in _pointwisedepth, which will call the appropriate depth measure
-    for time in to_compute:
+    for time in tqdm(to_compute, disable=quiet):
         cd = []
-        for _ in range(ss):
+        for _ in tqdm(range(ss), disable=quiet):
             sdata = data.sample(n=ss, axis=0)
             
             # If our current datapoint isnt in the sampled data, just append it since we need to sample it 

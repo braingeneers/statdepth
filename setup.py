@@ -10,9 +10,21 @@ with open('README.md') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+requirements = [
+    "plotly",
+    "pandas",
+    "numpy",
+    "scipy",
+    "numba"
+]
 
-setup_requirements = [ ]
+setup_requirements = [
+    "plotly",
+    "pandas",
+    "numpy",
+    "scipy",
+    "numba"
+]
 
 test_requirements = [ ]
 
@@ -31,7 +43,12 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     description="A library for computing statistical band depth for multivariate time series data",
-    install_requires=requirements,
+    install_requires=[
+    "plotly",
+    "pandas",
+    "numpy",
+    "scipy",
+    "numba"],
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
@@ -42,6 +59,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/braingeneers/functional_depth_methods',
-    version='0.1.0',
+    version='0.7.1',
     zip_safe=False,
 )

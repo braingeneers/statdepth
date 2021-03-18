@@ -2,6 +2,7 @@ import random
 import warnings
 from itertools import combinations
 from typing import Callable, List, Union
+from tqdm import tqdm
 
 import numpy as np
 import scipy as sp 
@@ -22,7 +23,8 @@ def _functionaldepth(
     J=2, 
     containment='r2', 
     relax=False, 
-    deep_check=False
+    deep_check=False,
+    quiet=True
 ) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the band depth for a set of functional curves.
@@ -72,7 +74,7 @@ def _functionaldepth(
             cols = to_compute
         
         # Calculate band depth for each sample (column)
-        for col in cols:
+        for col in tqdm(cols, disable=quiet):
             band_depths.append(_univariate_band_depth(data=df, curve=col, relax=relax, containment=cdef, J=J))
 
         # Return a series indexed by our samples
@@ -90,7 +92,7 @@ def _functionaldepth(
             data_to_compute = [data[i] for i in f]
             
             # Compute band depth for each function (DataFrame)
-            for cdf in data_to_compute:
+            for cdf in tqdm(data_to_compute, disable=quiet):
                 cdata = [df for df in data if df is not cdf]
                 depths.append(_simplex_depth(data=cdata, curve=cdf, J=J, relax=relax))
             depths = pd.Series(index=f, data=depths)
@@ -104,7 +106,8 @@ def _samplefunctionaldepth(
     J=2, 
     containment='r2', 
     relax=False, 
-    deep_check=False
+    deep_check=False,
+    quiet=True
 ) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the sample band depth for a set of functional curves.
@@ -161,23 +164,20 @@ def _samplefunctionaldepth(
         ss = df.shape[1] // K
 
         if ss == 0:
-            raise DepthDegeneracy(f'Block size {K} is too large, not enough curves to sample.')
+            raise DepthDegeneracy(f'Block size {K} is too large, not enough functions to sample.')
         
         if containment == 'simplex':
             cdef = _r2_containment
 
         # Iterate over curves (columns)
-        for col in orig.columns:
+        for col in tqdm(orig.columns, disable=quiet):
             depths = []
 
             # For each curve, compute sample band depth using K blocks of size ~len(df)/K
-            for _ in range(K):
+            for _ in tqdm(range(K), disable=quiet):
                 t = df.sample(n=ss, axis=1)
-
                 df = df.drop(t.columns, axis=1)
-
                 t.loc[:, col] = orig.loc[:, col]
-
                 depths.append(_univariate_band_depth(data=t, curve=col, relax=relax, containment=cdef, J=J))
             
             # Collect these estimates
@@ -192,7 +192,7 @@ def _samplefunctionaldepth(
         random.shuffle(shuffled)
         ss = len(data) // K 
 
-        for _ in range(K):
+        for _ in tqdm(range(K), disable=quiet):
             pass
         
     return samples

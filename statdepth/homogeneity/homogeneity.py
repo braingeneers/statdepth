@@ -44,7 +44,7 @@ class PointcloudHomogeneity:
             containment=containment,
             method=method,
         )
-    
+
     def F_depths(self):
         return self._F_depths
     

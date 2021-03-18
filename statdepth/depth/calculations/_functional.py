@@ -174,7 +174,7 @@ def _samplefunctionaldepth(
             depths = []
 
             # For each curve, compute sample band depth using K blocks of size ~len(df)/K
-            for _ in tqdm(range(K), disable=quiet):
+            for _ in range(K):
                 t = df.sample(n=ss, axis=1)
                 df = df.drop(t.columns, axis=1)
                 t.loc[:, col] = orig.loc[:, col]

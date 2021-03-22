@@ -197,7 +197,13 @@ def _samplefunctionaldepth(
         
     return samples
         
-def _univariate_band_depth(data: pd.DataFrame, curve: Union[str, int], relax: bool, containment: Callable, J=2) -> float:
+def _univariate_band_depth(
+    data: pd.DataFrame, 
+    curve: Union[str, int], 
+    relax: bool, 
+    containment: Callable, 
+    J=2
+) -> float:
     """
     Calculates each band depth for a given curve in the dataset. Meant for J > 2, as J=2 has a closed solution. This function is wrapped in banddepth()
     

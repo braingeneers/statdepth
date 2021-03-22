@@ -13,7 +13,13 @@ def _norm_cdf(x: np.array, mu: float, sigma: float):
     """
     return 0.5 * (1 + erf(x - mu) / (sigma * np.sqrt(2)))
 
-def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2, relax=False):
+def _uncertain_depth_univariate(
+    data: pd.DataFrame, 
+    curve: Union[str, int], 
+    sigma2: pd.DataFrame, 
+    J: int=2, 
+    relax=False,
+) -> pd.Series:
     """
     Calculate uncertain depth for the given curve, assuming each entry in our data comes from a normal distribution 
     where the mean is the observed value and the variance is the corresponding entry in sigma2.
@@ -105,9 +111,6 @@ def _uncertain_depth_univariate(data: pd.DataFrame, curve: Union[str, int], sigm
 #         depth += d / p
 
 #     return depth / binom(p, J)
-
-
-
 
 def _uncertain_depth(data: pd.DataFrame, sigma2: pd.DataFrame, J: int=2, relax=True):
     """

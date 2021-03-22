@@ -42,7 +42,14 @@ def generate_noisy_univariate(data: Union[list, np.array]=None, n: int=20, colum
 
     return df
 
-def generate_noisy_multivariate(data: pd.DataFrame=None, num_curves: int=5, n: int=10, d: int=3, columns=None, index=None) -> List[pd.DataFrame]:
+def generate_noisy_multivariate(
+    data: pd.DataFrame=None, 
+    num_curves: int=5, 
+    n: int=10, 
+    d: int=3, 
+    columns=None, 
+    index=None
+) -> List[pd.DataFrame]:
     """
     Generate num_curves noisy multivariate functions with d features observed at n time points. 
     Should be used for testing / understanding other methods in this library.
@@ -86,7 +93,12 @@ def generate_noisy_multivariate(data: pd.DataFrame=None, num_curves: int=5, n: i
     
     return fs
 
-def generate_noisy_pointcloud(n: int=50, d: int=2, columns=None, index=None) -> pd.DataFrame:
+def generate_noisy_pointcloud(
+    n: int=50, 
+    d: int=2, 
+    columns=None, 
+    index=None
+) -> pd.DataFrame:
     """
     Generate n d-dimensional points from the normal distribution over [0,1]
 

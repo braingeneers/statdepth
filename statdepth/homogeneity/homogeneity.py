@@ -7,7 +7,7 @@ from ..depth.abstract import AbstractDepth
 
 # Helper class 
 class FunctionalHomogeneity:
-    def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False):
+    def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False, quiet=False):
         self._orig_F = F 
         self._orig_G = G 
         self._hom = _functionalhomogeneity(
@@ -18,7 +18,8 @@ class FunctionalHomogeneity:
             containment=containment,
             method=method,
             relax=relax,
-            deep_check=deep_check
+            deep_check=deep_check,
+            quiet=quiet
         )
     
     def __str__(self):
@@ -31,12 +32,13 @@ class FunctionalHomogeneity:
         return str(self.homogeneity())
     
     def __repr__(self):
-        return str(self.homogeneity())    
+        return str(self.homogeneity())
 
 class PointcloudHomogeneity:
     def __init__(self, F, G, method='p1', K=None, J=None, containment='simplex', relax=False, deep_check=False):
-        self._orig_F = F 
-        self._orig_G = G 
+        self._orig_F = F
+        self._orig_G = G
+        
         self._F_depths, self._G_depths, self._hom  = _pointcloudhomogeneity(
             F=F,
             G=G,
@@ -68,11 +70,21 @@ def _functionalhomogeneity(
     containment='r2', 
     method='p1', 
     relax=False,
-    deep_check=False
+    deep_check=False,
+    quiet=False
 ):
     _handle_errors(F, G, method) 
 
-    G_depths = FunctionalDepth(data=G, K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
+    # Compute depths of G, needed in either case
+    G_depths = FunctionalDepth(
+        data=G,
+        K=K,
+        J=J,
+        containment=containment,
+        relax=relax,
+        deep_check=deep_check,
+        quiet=quiet,
+    )
     
     # Univariate case
     if len(F) == 1:
@@ -84,17 +96,28 @@ def _functionalhomogeneity(
 
         # Shitty hacky fix, will change this. Sorry if someone is reading this in the future and I didn't lol
         if 'g_deepest' in F.columns:
-            raise ValueError('Cannot have column named g_deepest')
+            raise ValueError('Cannot have column named g_deepest in F')
 
         # Append this to F and calculate it's depth with respect to the other samples in F
         F.loc[:, 'g_deepest'] = G_deepest
-        G_deep_in_F = FunctionalDepth([F], to_compute=['g_deepest'], K=K, J=J, containment=containment, relax=relax, deep_check=deep_check).ordered().loc['g_deepest']
+        
+        G_deep_in_F = FunctionalDepth(
+            [F],
+            to_compute=['g_deepest'],
+            K=K,
+            J=J,
+            containment=containment,
+            relax=relax,
+            deep_check=deep_check,
+            quiet=quiet,
+        ).ordered().loc['g_deepest']
+        
         F = F.drop('g_deepest', axis=1)
 
         if method == 'p1':
-            return G_deep_in_F / G_depths.median().iloc[0]
+            return G_deep_in_F 
         elif method == 'p2':
-            F_depths = FunctionalDepth([F], K=K, J=J, containment=containment, relax=relax, deep_check=deep_check)
+            F_depths = FunctionalDepth([F], K=K, J=J, containment=containment, relax=relax, deep_check=deep_check, quiet=quiet)
             return 1 - np.abs(G_deep_in_F - F_depths.median().iloc[0])
         elif method == 'p3':
             t = []

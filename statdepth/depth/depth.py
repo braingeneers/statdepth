@@ -6,7 +6,6 @@ from .calculations._helper import *
 
 from .calculations._functional import _functionaldepth, _samplefunctionaldepth
 from .calculations._pointcloud import _pointwisedepth, _samplepointwisedepth
-from .calculations._uncertainty import _uncertain_depth, _sampleuncertaindepth
 from .abstract import AbstractDepth
 
 __all__ = ['FunctionalDepth', 'PointcloudDepth', 'ProbabilisticDepth']
@@ -92,7 +91,7 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
 
         # We use deep_or_outlying.index to get the columns because 
         # deep_or_outlying is a Series indexed by the original columns
-
+        
         data=[go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='Blue', width=.5)) for y in cols]
         data.extend([go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='Red', width=2)) for y in deep_or_outlying.index])
 
@@ -215,14 +214,6 @@ def PointcloudDepth(data: pd.DataFrame, to_compute: pd.Index=None, K=None, conta
         depth = _pointwisedepth(data=data, to_compute=to_compute, containment=containment)
     
     return _PointwiseDepth(df=data, depths=depth)
-
-def ProbabilisticDepth(data: pd.DataFrame, sigma2: pd.DataFrame, K=None, J: int=2, relax: bool=False):
-    if K is not None:
-        depth = _sampleuncertaindepth(data=data, sigma2=sigma2, K=K, J=J, relax=relax)
-    else:
-        depth = _uncertain_depth(data=data, sigma2=sigma2, J=J, relax=relax)
-
-    return _FunctionalDepthSeries(df=data, depths=depth)
 
 # Wraps FunctionalDepth classes in a function, because we need to compute depths before we pass down to the class
 def FunctionalDepth(data: List[pd.DataFrame], to_compute=None, K=None, J=2, 

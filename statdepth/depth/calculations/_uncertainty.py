@@ -2,125 +2,142 @@ import pandas as pd
 import numpy as np
 from typing import List, Union
 from scipy.special import erf, binom
+from scipy.integrate import tplquad, quad
+import scipy.stats as stats
+from scipy.stats import norm
+from scipy.special import gamma, gammaincc, factorial
+from bigfloat import BigFloat
+from tqdm import tqdm
+from numpy import exp
+from scipy.special import hyp2f1, binom
 
 from ._functional import _subsequences
-
 from ._helper import *
 
-def _norm_cdf(x: np.array, mu: float, sigma: float):
-    """
-    Estimate the CDF at x for the normal distribution parametrized by mu and sigma^2
-    """
-    return 0.5 * (1 + erf(x - mu) / (sigma * np.sqrt(2)))
 
-def _uncertain_depth_univariate(
-    data: pd.DataFrame, 
-    curve: Union[str, int], 
-    sigma2: pd.DataFrame, 
-    J: int=2, 
-    relax=False,
-) -> pd.Series:
-    """
-    Calculate uncertain depth for the given curve, assuming each entry in our data comes from a normal distribution 
-    where the mean is the observed value and the variance is the corresponding entry in sigma2.
+__all__ = ['probabilistic_normal_depth', 'probabilistic_poisson_depth']
 
-    Parameters:
-    -----------
-    data: pd.DataFrame
-        An n x p matrix, where we have p real-valued functions collected at n discrete time intervals
-    curve: int or str
-        Column (function) to calculate depth for 
-    sigma2: pd.DataFrame
-        An n x p matrix where each entry is the variance of the distribution at that entry
+def normcdf(x, mu, sigma):
+    return norm(loc=mu, scale=sigma).cdf(x)
 
-    Returns:
-    ----------
-    pd.Series: Depth values for each function (column)
-    """
-    # Dont use f1 for both x and mu, use curve because that's what we're interested in 
+def f_long_norm(z, parameters: list):
+    mu_i, sigma_i, mu_j, sigma_j, mu, sigma = parameters
+    return (normcdf(z, mu_i, sigma_i)-normcdf(z, mu, sigma)*normcdf(z, mu_j, sigma_j))*\
+            norm(loc=mu, scale=sigma).pdf(z)
 
-    # if relax:
-    #     sym = '*'
-    # else:
-    #     sym = '+'
 
-    n, p = data.shape
-    depth = 0
-    sigma = sigma2.pow(.5)
+def _normal_depth(means, stds, curr, f):
+    n = len(means)
+    cols = list(range(n))
+    cols.remove(curr)
+    S_nj = 0
+    subseq = _subsequences(cols, 2)
 
-    # Drop our current curve from our data
-    if curve in data.columns:   
-        data = data.drop(curve, axis=1)
+    for i in tqdm(range(len(subseq))):
+        sequence = subseq[i]
+        i, j = sequence
+        
+        parameters = [
+            means[i], stds[i], 
+            means[j], stds[j], 
+            means[curr], stds[curr]
+        ]
+        
+        integral = quad(lambda x: f(x, parameters), -np.inf, np.inf)[0]
+        S_nj += integral
+        
+    return S_nj / binom(n, 2)
 
-    subseq = _subsequences(data.columns, J)
-    if J == 2:
-        for seq in subseq:
-            d = 1
-            f1 = seq[0]
-            f2 = seq[1]
-            for time in data.index:
-                p1 = _norm_cdf(data.loc[time, f1], data.loc[time, curve], sigma.loc[time, f1])
-                p2 = _norm_cdf(data.loc[time, f2], data.loc[time, curve], sigma.loc[time, f2])
+def probabilistic_normal_depth(means, stds, f=f_long_norm):
+    if len(means) != len(stds):
+        raise ValueError('Error, len(means) must equal len(stds)')
 
-                if relax:
-                    d *= p1 + p2 - 2 * p1 * p2
-                else: 
-                    d += p1 + p2 - 2 * p1 * p2
-
-            depth += d
-    elif J == 3:
-        for seq in subseq:
-            d = 1
-            f1, f_2, f_3 = seq[0], seq[1], seq[2]
-
-            for time in data.index:
-                p1 = _norm_cdf(data.loc[time, f1], data.loc[time, curve], sigma.loc[time, f1])
-                p2 = _norm_cdf(data.loc[time, f2], data.loc[time, curve], sigma.loc[time, f2])
-                p3 = _norm_cdf(data.loc[time, f3], data.loc[time, curve], sigma.loc[time, f3])
-                
-                if relax:
-                    d *= p1 + p2 + p3 - p1 * p2 - p2*p3 - p1*p3
-                else:
-                    d += p1 + p2 + p3 - p1 * p2 - p2*p3 - p1*p3
-
-            depth += d
-    else: # Handle J=4 later, not sure about computation
-        pass
-
-    return depth / binom(data.shape[1], J) if relax else depth / binom(data.shape[1], J) * n / p # Because in the nonrelax case we are summing 1/|D| n times
-
-# def _gen_uncertain_depth(data: pd.DataFrame, curve: Union[str, int], sigma2: pd.DataFrame, J: int=2):
-#     n, p = data.shape
-#     depth = 0
-#     sigma = sigma2.pow(.5)
-
-#     # Drop our current curve from our data
-#     if curve in data.columns:   
-#         data = data.drop(curve, axis=1)
-
-#     subseq = _subsequences(data.columns, J)
-#     for seq in subseq:
-#         d = 1
-#         f1 = seq[0]
-#         f2 = seq[1]
-#         for time in data.index:
-#             p1 = _norm_cdf(data.loc[time, f1], data.loc[time, f1], sigma.loc[time, f1])
-#             p2 = _norm_cdf(data.loc[time, f2], data.loc[time, f2], sigma.loc[time, f2])
-
-#             d += p1 + p2 - 2 * p1 * p2
-#         depth += d / p
-
-#     return depth / binom(p, J)
-
-def _uncertain_depth(data: pd.DataFrame, sigma2: pd.DataFrame, J: int=2, relax=True):
-    """
-    Calculate probabilistic depth for each function (column) in the given data. 
-    """
     depths = []
+    for k in tqdm(range(len(means))):
+        mc = np.delete(means, [k])
+        stdsc = np.delete(stds, [k])
+        
+        depths.append(    
+            _normal_depth(means, stds, k, f)
+        )
+    
+    return pd.DataFrame({
+        'means': means,
+        'stds': stds,
+        'depths': depths
+    })
 
-    for col in data:
-        depths.append(_uncertain_depth_univariate(data=data, curve=col, sigma2=sigma2, J=J))
-    return pd.Series(index=data.columns, data=depths)
+def gammainc(a, x):
+    return gamma(a) * gammaincc(a, x)
 
-def _sampleuncertaindepth(data: pd.DataFrame, sigma2: pd.DataFrame, K: int=2, J: int=2, relax=True):
-    pass
+def f_poisson(lambda_i: float, lambda_f: float, lambda_j: float, lim=1000, quiet=False) -> float:
+    '''
+    Parameters:
+    
+    lambda_i: 
+        mean of f_i (lower function)
+    lambda_f: 
+        mean of f (function to calculate probabilistic containment)
+    lambda_j: 
+        mean of f_j (upper function)
+    lim=10000: Upper bound of discrete infinite sum
+    
+    Returns:
+    
+    float: Probability of containment
+    '''
+    
+    s = 0
+    
+    for z in range(1, lim):
+        num = BigFloat(np.power(lambda_f, z)*(gamma(z)-gammainc(z, lambda_j))*gammainc(1+z, lambda_i))
+        denom = BigFloat(factorial(z)*gamma(z)*gamma(1+z))
+        
+        if num == 0 or denom == 0 and not quiet:
+            break
+        
+        d = BigFloat(num / denom)
+        
+        s += d
+        
+    return exp(-lambda_f) * s
+
+def _poisson_depth(means: list, curr: int, to_compute=None):
+    n = len(means)
+    cols = list(range(n))
+    cols.remove(curr)
+    S_nj = 0
+    subseq = _subsequences(cols, 2)
+
+    for i in tqdm(range(len(subseq))):
+        sequence = subseq[i]
+        i, j = sequence
+        lambda_i, lambda_f, lambda_j = means[i], means[curr], means[j]
+        
+        S_nj += f_poisson(lambda_i, lambda_f, lambda_j)
+        
+    return S_nj / binom(n, 2)
+
+def probabilistic_poisson_depth(means: list, to_compute=None):
+    depths = []
+    for i in tqdm(range(len(means))):
+        depths.append(_poisson_depth(means, i, to_compute=to_compute))
+    
+    return pd.DataFrame({'means': means, 'depths': depths})
+
+def f_binom(params: list, lim=1000) -> float:
+    n_i, p_i, n, p, n_j, p_j = params
+    
+    s = 0
+    for z in range(1, lim):
+        print(f'z is {z}')
+        t = (1-p)**(n-z)*p**z*(1-p_i)**n_i*(1-p_j)**(n_j-z)*p_j**z*\
+             binom(n, z)*binom(n_j, z)*\
+             ((1/(1-p_i))**n_i - (1-p_i)**(-1-z)*p_i**(1+z)*binom(n_i, 1+z)*\
+             hyp2f1(1,1-n_i+z, 2+z, p_i/(p_i-1)))*hyp2f1(1, -n_j+z, 1+z, p_j/(p_j-1))
+        
+        if np.isnan(t):
+            print(t)
+            break
+            
+    return s

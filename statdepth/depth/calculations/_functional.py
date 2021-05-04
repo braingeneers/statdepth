@@ -109,6 +109,7 @@ def _samplefunctionaldepth(
     deep_check=False,
     quiet=True
 ) -> Union[pd.Series, pd.DataFrame]:
+
     """
     Calculate the sample band depth for a set of functional curves.
 

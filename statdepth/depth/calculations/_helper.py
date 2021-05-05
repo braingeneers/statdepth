@@ -3,6 +3,18 @@ import numpy as np
 from typing import List, Union, Callable
 from itertools import combinations
 from scipy.special import binom
+from scipy.integrate import quad
+import numpy as np
+import pandas as pd 
+import scipy.stats as stats
+from tqdm import tqdm
+
+from numpy import exp
+from scipy.special import erf
+from scipy.integrate import quad
+from scipy.stats import norm
+from scipy.special import gamma, gammaincc, factorial
+
 
 __all__ = ['_subsequences', '_handle_depth_errors', 'DepthDegeneracy']
 
@@ -106,3 +118,7 @@ def _handle_depth_errors(
 
 def gammainc(a, x):
     return gamma(a) * gammaincc(a, x)
+
+def normcdf(x, mu, sigma):
+    return norm(loc=mu, scale=sigma).cdf(x)
+

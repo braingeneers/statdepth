@@ -103,3 +103,6 @@ def _handle_depth_errors(
         # Check that all indices are the same.
         if not all([all(indices[0] == i) for i in indices]):
             raise ValueError('DataFrames indices must be the same')
+
+def gammainc(a, x):
+    return gamma(a) * gammaincc(a, x)

@@ -1,1 +1,1 @@
-from .depth import FunctionalDepth, PointcloudDepth, ProbabilisticDepth
+from .depth import FunctionalDepth, PointcloudDepth

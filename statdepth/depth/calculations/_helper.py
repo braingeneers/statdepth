@@ -15,9 +15,6 @@ from scipy.integrate import quad
 from scipy.stats import norm
 from scipy.special import gamma, gammaincc, factorial
 
-
-__all__ = ['_subsequences', '_handle_depth_errors', 'DepthDegeneracy']
-
 # Custom error class for anytime there is going to be some degeneracy with depth calculation (i.e. degenerate simplices)
 class DepthDegeneracy(Exception):
     pass

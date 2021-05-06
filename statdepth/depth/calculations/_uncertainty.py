@@ -19,7 +19,7 @@ __all__ = ['probabilistic_normal_depth', 'probabilistic_poisson_depth']
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Poisson
-def _poisson_containment(lambda_i: float, lambda_f: float, lambda_j: float, lim: int, tol=10**-6, quiet=False) -> float:
+def _poisson_containment(lambda_i: float, lambda_f: float, lambda_j: float, lim: int, tol: float, quiet=False) -> float:
     s = 0
     
     for z in range(1, lim):
@@ -28,13 +28,13 @@ def _poisson_containment(lambda_i: float, lambda_f: float, lambda_j: float, lim:
         c = ls * ks * poisson.pmf(k=z, mu=lambda_f)
         
         if c <= tol:
-            break 
+            break
 
         s += c
 
     return s
 
-def _poisson_depth(df: pd.DataFrame, curr: int, lim: int, tol=10**-6, to_compute=None):
+def _poisson_depth(df: pd.DataFrame, curr: int, lim: int, tol: float, to_compute=None):
     n, p = df.shape
     S_nj = 0
     cols = list(df.columns)
@@ -55,11 +55,11 @@ def _poisson_depth(df: pd.DataFrame, curr: int, lim: int, tol=10**-6, to_compute
         
     return S_nj
 
-def probabilistic_poisson_depth(df: pd.DataFrame, to_compute=None, lim=1000):
+def probabilistic_poisson_depth(df: pd.DataFrame, to_compute=None, lim=1000, tol=10**-6):
     n, p = df.shape
     depths = []
     for f in tqdm(df.columns):
-        depths.append(1/binom(n, 2) * _poisson_depth(df, f, lim, to_compute))
+        depths.append(1/binom(n, 2) * _poisson_depth(df, f, lim, tol, to_compute))
     
     return pd.Series(index=df.columns, data=depths)
 

@@ -11,7 +11,6 @@ from numpy import exp
 from scipy.special import hyp2f1, binom
 from scipy.stats import poisson
 
-from ._functional import _subsequences
 from ._helper import *
 
 

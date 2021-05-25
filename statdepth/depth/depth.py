@@ -84,7 +84,14 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(df=df, depths=depths)
 
-    def _plot(self, deep_or_outlying: pd.Series, title: str, return_plot: bool) -> None:
+    def _plot(
+        self, 
+        deep_or_outlying: pd.Series, 
+        title: str, 
+        xaxis_title: str,
+        yaxis_title: str,
+        return_plot: bool,
+    ) -> None:
         cols = self._orig_data.columns
         x = self._orig_data.index
 
@@ -97,7 +104,9 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         fig = go.Figure(
             data=data, 
             layout=go.Layout(
-                title=dict(text=title, y=0.9, x=0.5, xanchor='center', yanchor='top')
+                title=dict(text=title, y=0.9, x=0.5, xanchor='center', yanchor='top'),
+                xaxis=dict(title=xaxis_title),
+                yaxis=dict(title=yaxis_title)
             )
         )
 
@@ -108,19 +117,35 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         else:
             fig.show()
 
-    def plot_deepest(self, n=1, title=None, return_plot=False) -> None:
+    def plot_deepest(
+        self, n=1, 
+        title=None, 
+        xaxis_title = None,
+        yaxis_title = None,
+        return_plot=False
+    ) -> None:
         '''Plots all the data in blue and marks the n deepest in red'''
         return self._plot(
             deep_or_outlying=self.deepest(n=n), 
             title=title,
+            xaxis_title=xaxis_title,
+            yaxis_title=yaxis_title,
             return_plot=return_plot,
         )
 
-    def plot_outlying(self, n=1, title=None, return_plot=False) -> None:
+    def plot_outlying(
+        self, n=1, 
+        title=None, 
+        xaxis_title = None,
+        yaxis_title = None,
+        return_plot=False
+    ) -> None:
         '''Plots all the data in blue and marks the n most outlying curves in red'''
         return self._plot(
             deep_or_outlying=self.outlying(n=n), 
             title=title, 
+            xaxis_title=xaxis_title,
+            yaxis_title=yaxis_title,
             return_plot=return_plot,
         )
 

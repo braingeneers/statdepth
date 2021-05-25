@@ -84,7 +84,7 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(df=df, depths=depths)
 
-    def _plot(self, deep_or_outlying: pd.Series, title: str, export_path: str) -> None:
+    def _plot(self, deep_or_outlying: pd.Series, title: str, return_plot: bool) -> None:
         cols = self._orig_data.columns
         x = self._orig_data.index
 
@@ -102,18 +102,26 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
 
         fig.update_layout(showlegend=False)
 
-        if export_path != None:
-            fig.write_image(export_path, engine='kaleido')
+        if return_plot:
+            return fig
+        else:
+            fig.show()
 
-        fig.show()
-
-    def plot_deepest(self, n=1, title=None, export_path=None) -> None:
+    def plot_deepest(self, n=1, title=None, return_plot=False) -> None:
         '''Plots all the data in blue and marks the n deepest in red'''
-        self._plot(deep_or_outlying=self.deepest(n=n), title=title, export_path=export_path)
+        self._plot(
+            deep_or_outlying=self.deepest(n=n), 
+            title=title,
+            return_plot=return_plot,
+        )
 
-    def plot_outlying(self, n=1, title=None, export_path=None) -> None:
+    def plot_outlying(self, n=1, title=None, return_plot=False) -> None:
         '''Plots all the data in blue and marks the n most outlying curves in red'''
-        self._plot(deep_or_outlying=self.outlying(n=n), title=title, export_path=export_path)
+        self._plot(
+            deep_or_outlying=self.outlying(n=n), 
+            title=title, 
+            return_plot=return_plot,
+        )
 
     # Have to redefine these because in the univariate case our samples are column based
     def drop_outlying_data(self, n=1) -> pd.DataFrame:

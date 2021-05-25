@@ -14,6 +14,7 @@ from scipy.special import comb, binom
 from ._containment import _r2_containment, _r2_enum_containment, _simplex_containment, _select_containment, _is_valid_containment, _is_in_simplex
 
 from ._helper import *
+from ._helper import _subsequences, _handle_depth_errors
 
 __all__ = ['_functionaldepth', '_samplefunctionaldepth']
 

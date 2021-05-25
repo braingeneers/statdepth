@@ -10,9 +10,8 @@ from tqdm import tqdm
 from numpy import exp
 from scipy.special import hyp2f1, binom
 from scipy.stats import poisson
-
 from ._helper import *
-
+from ._helper import _subsequences
 
 __all__ = ['probabilistic_normal_depth', 'probabilistic_poisson_depth']
 
@@ -120,8 +119,8 @@ def _normal_depth(means, stds, curr, f):
         S_nj += integral
         
     return S_nj / binom(n, 2)
-
-def probabilistic_normal_depth(means, stds, f):
+    
+def probabilistic_normal_depth(means, stds, f=_normal_containment):
     if len(means) != len(stds):
         raise ValueError('Error, len(means) must equal len(stds)')
 

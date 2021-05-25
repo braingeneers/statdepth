@@ -3,7 +3,6 @@ from typing import Callable, List, Union, Dict
 import plotly.graph_objects as go
 
 from .calculations._helper import *
-
 from .calculations._functional import _functionaldepth, _samplefunctionaldepth
 from .calculations._pointcloud import _pointwisedepth, _samplepointwisedepth
 from .abstract import AbstractDepth
@@ -85,7 +84,7 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(df=df, depths=depths)
 
-    def _plot(self, deep_or_outlying: pd.Series) -> None:
+    def _plot(self, deep_or_outlying: pd.Series, title: str, export_path: str) -> None:
         cols = self._orig_data.columns
         x = self._orig_data.index
 
@@ -93,20 +92,28 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         # deep_or_outlying is a Series indexed by the original columns
         
         data=[go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='Blue', width=.5)) for y in cols]
-        data.extend([go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='Red', width=2)) for y in deep_or_outlying.index])
+        data.extend([go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='Red', width=1)) for y in deep_or_outlying.index])
 
-        fig = go.Figure(data=data)
+        fig = go.Figure(data=data, 
+            layout=go.Layout(
+                title=dict(text=title, y=0.9, x=0.5, xanchor='center', yanchor='top')
+                )
+            )
+
         fig.update_layout(showlegend=False)
+
+        if export_path != None:
+            fig.write_image(export_path, engine='kaleido')
 
         fig.show()
 
-    def plot_deepest(self, n=1) -> None:
+    def plot_deepest(self, n=1, title=None, export_path=None) -> None:
         '''Plots all the data in blue and marks the n deepest in red'''
-        self._plot(deep_or_outlying=self.deepest(n=n))
+        self._plot(deep_or_outlying=self.deepest(n=n), title=title, export_path=export_path)
 
-    def plot_outlying(self, n=1) -> None:
+    def plot_outlying(self, n=1, title=None, export_path=None) -> None:
         '''Plots all the data in blue and marks the n most outlying curves in red'''
-        self._plot(deep_or_outlying=self.outlying(n=n))
+        self._plot(deep_or_outlying=self.outlying(n=n), title=title, export_path=export_path)
 
     # Have to redefine these because in the univariate case our samples are column based
     def drop_outlying_data(self, n=1) -> pd.DataFrame:

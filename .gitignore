@@ -104,3 +104,5 @@ ENV/
 # IDE settings
 .vscode/
 
+# Mac specific 
+.DS_Store

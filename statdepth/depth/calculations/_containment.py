@@ -6,7 +6,6 @@ import numpy as np
 import scipy as sp 
 import pandas as pd
 
-from numba import jit
 from scipy.special import comb, binom
 from scipy.optimize import linprog
 

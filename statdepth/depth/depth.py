@@ -98,7 +98,7 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         # We use deep_or_outlying.index to get the columns because 
         # deep_or_outlying is a Series indexed by the original columns
         
-        data=[go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='Blue', width=.5)) for y in cols]
+        data=[go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='#6ea8ff', width=.5)) for y in cols]
         data.extend([go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='Red', width=1)) for y in deep_or_outlying.index])
 
         fig = go.Figure(

@@ -8,11 +8,9 @@ import numpy as np
 import scipy as sp 
 import pandas as pd
 
-from numba import jit
 from scipy.special import comb, binom
 
 from ._containment import _r2_containment, _r2_enum_containment, _simplex_containment, _select_containment, _is_valid_containment, _is_in_simplex
-
 from ._helper import *
 from ._helper import _subsequences, _handle_depth_errors
 
@@ -20,12 +18,12 @@ __all__ = ['_functionaldepth', '_samplefunctionaldepth']
 
 def _functionaldepth(
     data: List[pd.DataFrame], 
-    to_compute: Union[list, pd.Index]=None, 
+    to_compute: Union[list, pd.Index]=None,
     J=2, 
     containment='r2', 
     relax=False, 
     deep_check=False,
-    quiet=True
+    quiet=True,
 ) -> Union[pd.Series, pd.DataFrame]:
     """
     Calculate the band depth for a set of functional curves.

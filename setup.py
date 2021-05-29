@@ -15,7 +15,6 @@ requirements = [
     "pandas",
     "numpy",
     "scipy",
-    "numba"
 ]
 
 setup_requirements = [
@@ -23,7 +22,6 @@ setup_requirements = [
     "pandas",
     "numpy",
     "scipy",
-    "numba"
 ]
 
 test_requirements = [ ]
@@ -59,6 +57,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/braingeneers/functional_depth_methods',
-    version='0.7.14',
+    version='0.7.16',
     zip_safe=False,
 )

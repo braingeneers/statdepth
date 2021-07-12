@@ -248,7 +248,13 @@ class _PointwiseDepth(_FunctionalDepthSeries):
         self.plot_depths(invert_colors, marker)
 
 # Wraps the PointwiseDepth class in a function, because we need to compute depths before we pass down to the class
-def PointcloudDepth(data: pd.DataFrame, to_compute: pd.Index=None, K=None, containment='simplex', quiet=True) -> _PointwiseDepth:
+def PointcloudDepth(
+    data: pd.DataFrame, 
+    to_compute: pd.Index=None, 
+    K=None, 
+    containment='simplex', 
+    quiet=True
+) -> _PointwiseDepth:
     if K is not None:
         depth = _samplepointwisedepth(data=data, to_compute=to_compute, K=K, containment=containment)
     else:
@@ -257,8 +263,16 @@ def PointcloudDepth(data: pd.DataFrame, to_compute: pd.Index=None, K=None, conta
     return _PointwiseDepth(df=data, depths=depth)
 
 # Wraps FunctionalDepth classes in a function, because we need to compute depths before we pass down to the class
-def FunctionalDepth(data: List[pd.DataFrame], to_compute=None, K=None, J=2, 
-containment='r2', relax=False, deep_check=False, quiet=True) -> Union[_FunctionalDepthSeries, _FunctionalDepthUnivariate, _FunctionalDepthMultivariateDataFrame]:   
+def FunctionalDepth(
+    data: List[pd.DataFrame], 
+    to_compute=None, 
+    K=None, 
+    J=2, 
+    containment='r2', 
+    relax=False, 
+    deep_check=False, 
+    quiet=True
+) -> Union[_FunctionalDepthSeries, _FunctionalDepthUnivariate, _FunctionalDepthMultivariateDataFrame]:   
 
     # Compute band depth completely or sample band depth
     if K is not None:

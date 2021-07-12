@@ -106,3 +106,5 @@ ENV/
 
 # Mac specific 
 .DS_Store
+
+credentials

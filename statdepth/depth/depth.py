@@ -98,15 +98,30 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         # We use deep_or_outlying.index to get the columns because 
         # deep_or_outlying is a Series indexed by the original columns
         
-        data=[go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='#6ea8ff', width=.5)) for y in cols]
-        data.extend([go.Scatter(x=x, y=self._orig_data.loc[:, y], mode='lines', line=dict(color='Red', width=1)) for y in deep_or_outlying.index])
+        data=[go.Scatter(
+            x=x, 
+            y=self._orig_data.loc[:, y], 
+            mode='lines', 
+            name=y,
+            line=dict(color='#6ea8ff', width=.5)) for y in cols
+        ]
+
+        data.extend(
+            [go.Scatter(
+                x=x, 
+                y=self._orig_data.loc[:, y], 
+                mode='lines', 
+                name=y,
+                line=dict(color='Red', width=1)) for y in deep_or_outlying.index
+            ]
+        )
 
         fig = go.Figure(
             data=data, 
             layout=go.Layout(
                 title=dict(text=title, y=0.9, x=0.5, xanchor='center', yanchor='top'),
                 xaxis=dict(title=xaxis_title),
-                yaxis=dict(title=yaxis_title)
+                yaxis=dict(title=yaxis_title),
             )
         )
 
@@ -177,9 +192,13 @@ class _PointwiseDepth(_FunctionalDepthSeries):
             self._plot_parallel_axis()
         elif n == 3:
             fig = go.Figure(data=[
-                go.Scatter3d(x=self._orig_data.loc[:, cols[0]], y=self._orig_data.loc[:, cols[1]], z=self._orig_data.loc[:, cols[2]], 
-                mode='markers', 
-                marker=marker)
+                go.Scatter3d(
+                    x=self._orig_data.loc[:, cols[0]], 
+                    y=self._orig_data.loc[:, cols[1]], 
+                    z=self._orig_data.loc[:, cols[2]], 
+                    mode='markers', 
+                    marker=marker
+                )
             ])
 
             fig.update_layout(showlegend=False)
@@ -187,9 +206,12 @@ class _PointwiseDepth(_FunctionalDepthSeries):
 
         elif n == 2:
             fig = go.Figure(data=[
-                go.Scatter(x=self._orig_data.loc[:, cols[0]], y=self._orig_data.loc[:, cols[1]], 
-                mode='markers', 
-                marker=marker)
+                go.Scatter(
+                    x=self._orig_data.loc[:, cols[0]], 
+                    y=self._orig_data.loc[:, cols[1]], 
+                    mode='markers',
+                    marker=marker
+                )
             ])
 
             fig.update_layout(showlegend=False)
@@ -221,9 +243,20 @@ class _PointwiseDepth(_FunctionalDepthSeries):
 
         elif n == 2: 
             fig = go.Figure(data=[
-                go.Scatter(x=self._orig_data[cols[0]], y=self._orig_data[cols[1]], mode='markers', marker_color='blue', name=''),
-                go.Scatter(x=select[cols[0]], y=select[cols[1]], mode='markers', 
-                        marker_color='red', name='')
+                go.Scatter(
+                    x=self._orig_data[cols[0]], 
+                    y=self._orig_data[cols[1]], 
+                    mode='markers', 
+                    marker_color='blue', 
+                    name=''
+                ),
+                go.Scatter(
+                    x=select[cols[0]], 
+                    y=select[cols[1]], 
+                    mode='markers', 
+                    marker_color='red', 
+                    name=''
+                )
             ])
             
             fig.update_layout(showlegend=False)

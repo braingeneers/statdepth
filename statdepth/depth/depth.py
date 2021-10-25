@@ -91,6 +91,7 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         xaxis_title: str,
         yaxis_title: str,
         return_plot: bool,
+        showlegend: bool,
     ) -> None:
         cols = self._orig_data.columns
         x = self._orig_data.index
@@ -98,19 +99,18 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         # We use deep_or_outlying.index to get the columns because 
         # deep_or_outlying is a Series indexed by the original columns
         
-        data=[go.Scatter(
+        data = [go.Scatter(
             x=x, 
             y=self._orig_data.loc[:, y], 
             mode='lines', 
             name=y,
-            line=dict(color='#6ea8ff', width=.5)) for y in cols
+            line=dict(color='#6ea8ff', width=.5)) for y in cols.difference(deep_or_outlying.index)
         ]
 
-        data.extend(
-            [go.Scatter(
+        data.extend([go.Scatter(
                 x=x, 
                 y=self._orig_data.loc[:, y], 
-                mode='lines', 
+                mode='lines',
                 name=y,
                 line=dict(color='Red', width=1)) for y in deep_or_outlying.index
             ]
@@ -125,7 +125,9 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
             )
         )
 
-        fig.update_layout(showlegend=False)
+        data = []
+
+        fig.update_layout(showlegend=showlegend)
         
         if return_plot:
             return fig
@@ -137,7 +139,8 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         title=None, 
         xaxis_title = None,
         yaxis_title = None,
-        return_plot=False
+        return_plot=False,
+        showlegend=False
     ) -> None:
         '''Plots all the data in blue and marks the n deepest in red'''
         return self._plot(
@@ -146,6 +149,7 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
             xaxis_title=xaxis_title,
             yaxis_title=yaxis_title,
             return_plot=return_plot,
+            showlegend=showlegend,
         )
 
     def plot_outlying(
@@ -153,7 +157,8 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         title=None, 
         xaxis_title = None,
         yaxis_title = None,
-        return_plot=False
+        return_plot=False,
+        showlegend=False,
     ) -> None:
         '''Plots all the data in blue and marks the n most outlying curves in red'''
         return self._plot(
@@ -162,6 +167,7 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
             xaxis_title=xaxis_title,
             yaxis_title=yaxis_title,
             return_plot=return_plot,
+            showlegend=showlegend
         )
 
     # Have to redefine these because in the univariate case our samples are column based
@@ -170,6 +176,9 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
     
     def get_deep_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.loc[:, self.deepest(n=n).index]
+
+    def get_outlying_data(self, n=1) -> pd.DataFrame:
+        return self._orig_data.loc[:, self.outlying(n=n).index]
 
 class _PointwiseDepth(_FunctionalDepthSeries):
     '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''

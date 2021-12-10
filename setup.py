@@ -15,14 +15,10 @@ requirements = [
     "pandas",
     "numpy",
     "scipy",
+    "kaleido"
 ]
 
-setup_requirements = [
-    "plotly",
-    "pandas",
-    "numpy",
-    "scipy",
-]
+setup_requirements = requirements.copy()
 
 test_requirements = [ ]
 
@@ -40,7 +36,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    description="A library for computing statistical band depth for multivariate time series data",
+    description="A library for computing statistical depth for univariate and multivariate functional data, and pointcloud data. Additionally, methods for homogeneity testing and visualization are provided.",
     install_requires=[
     "plotly",
     "pandas",

@@ -203,7 +203,7 @@ class _PointwiseDepth(_FunctionalDepthSeries):
             d = 1 - d
 
         if marker is None:
-            marker = dict(color=d, colorscale='viridis', size=10)
+            marker = dict(color=d, colorscale='viridis', size=7)
 
         if n > 3:
             self._plot_parallel_axis()

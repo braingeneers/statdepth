@@ -91,7 +91,7 @@ def generate_noisy_multivariate(
     if data is None:
         data = np.random.rand(n, d)
         
-    for k in range(num_curves):
+    for _ in range(num_curves):
         r = np.random.rand()
         fs.append(pd.DataFrame(data) * r)
 
@@ -129,7 +129,7 @@ def generate_noisy_pointcloud(
     """
     np.random.seed(seed)
 
-    df = pd.DataFrame(np.random.rand(n, d))
+    df = pd.DataFrame(np.random.normal(size=[n, d]))
 
     if columns is not None:
         df.columns = columns

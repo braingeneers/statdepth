@@ -118,7 +118,7 @@ def _functionalhomogeneity(
             return G_deep_in_F 
         elif method == 'p2':
             F_depths = FunctionalDepth([F], K=K, J=J, containment=containment, relax=relax, deep_check=deep_check, quiet=quiet)
-            return 1 - np.abs(G_deep_in_F - F_depths.median().iloc[0])
+            return np.abs(G_deep_in_F - F_depths.median().iloc[0])
         elif method == 'p3':
             t = []
 

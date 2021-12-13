@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from ._containment import _is_in_simplex
 from ._helper import *
+from . import _helper
 
 __all__ = ['_pointwisedepth', '_samplepointwisedepth']
 
@@ -46,7 +47,7 @@ def _pointwisedepth(
             
             point = data.loc[time, :]
             
-            subseq = _subsequences(list(data.drop(time, axis=0).index), d + 1)
+            subseq = _helper._subsequences(list(data.drop(time, axis=0).index), d + 1)
 
             for seq in subseq:
                 S_nj += _is_in_simplex(simplex_points=
@@ -189,7 +190,7 @@ def _oja_depth(data: pd.DataFrame, to_compute: list=None) -> pd.Series:
     for point in idx:
         ci = list(idx)
         ci.remove(point)
-        subseq = _subsequences(ci, d)
+        subseq = _helper._subsequences(ci, d)
 
         cd = 0
         for seq in subseq:

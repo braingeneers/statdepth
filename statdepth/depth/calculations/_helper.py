@@ -2,18 +2,12 @@ import pandas as pd
 import numpy as np 
 from typing import List, Union, Callable
 from itertools import combinations
-from scipy.special import binom
-from scipy.integrate import quad
 import numpy as np
 import pandas as pd 
-import scipy.stats as stats
-from tqdm import tqdm
 
-from numpy import exp
-from scipy.special import erf
-from scipy.integrate import quad
+import scipy.stats as stats
 from scipy.stats import norm
-from scipy.special import gamma, gammaincc, factorial
+from scipy.special import gamma, gammaincc
 
 # Custom error class for anytime there is going to be some degeneracy with depth calculation (i.e. degenerate simplices)
 class DepthDegeneracy(Exception):
@@ -36,7 +30,6 @@ def _subsequences(s: list, l: int) -> list:
     """
 
     return list(set(combinations(s, l)))
-
 
 def _handle_depth_errors(
     data: List[pd.DataFrame], 

@@ -186,7 +186,15 @@ class _PointwiseDepth(_FunctionalDepthSeries):
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
         super().__init__(df=df, depths=depths)
 
-    def plot_depths(self, invert_colors=False, marker=None) -> None:
+    def plot_depths(
+        self, 
+        invert_colors=False, 
+        marker=None,
+        return_plot=False,
+        title='',
+        xaxis_title=None, 
+        yaxis_title=None,
+     ) -> None:
         d = self._depths
         cols = self._orig_data.columns
         n = len(self._orig_data.columns)
@@ -200,7 +208,7 @@ class _PointwiseDepth(_FunctionalDepthSeries):
         if n > 3:
             self._plot_parallel_axis()
         elif n == 3:
-            fig = go.Figure(data=[
+            data=[
                 go.Scatter3d(
                     x=self._orig_data.loc[:, cols[0]], 
                     y=self._orig_data.loc[:, cols[1]], 
@@ -208,30 +216,39 @@ class _PointwiseDepth(_FunctionalDepthSeries):
                     mode='markers', 
                     marker=marker
                 )
-            ])
-
-            fig.update_layout(showlegend=False)
-            fig.show()
+            ]
 
         elif n == 2:
-            fig = go.Figure(data=[
+            data=[
                 go.Scatter(
                     x=self._orig_data.loc[:, cols[0]], 
                     y=self._orig_data.loc[:, cols[1]], 
                     mode='markers',
                     marker=marker
                 )
-            ])
-
-            fig.update_layout(showlegend=False)
-            fig.show()
+            ]
         else: #n==1
-            pass
+            raise ValueError(f'Error: Dimensionality of data must be >=2. Value found is {n}')
+        
+        fig = go.Figure(
+            data=data,
+            layout=go.Layout(title=title, xaxis_title=xaxis_title, yaxis_title=yaxis_title)
+        )
+        fig.update_layout(showlegend=False)
 
+        return fig if return_plot else fig.show()
+        
     def _plot_parallel_axis(self) -> None:
         pass 
 
-    def _plot(self, deep_or_outlying: pd.Series) -> None:
+    def _plot(
+        self, 
+        deep_or_outlying: pd.Series,
+        return_plot=False,
+        title='',
+        xaxis_title=None, 
+        yaxis_title=None,
+    ) -> None:
         n = len(self._orig_data.columns)
         cols = self._orig_data.columns
         select = self._orig_data.loc[deep_or_outlying.index, :]
@@ -239,19 +256,26 @@ class _PointwiseDepth(_FunctionalDepthSeries):
         if n > 3:
             self._plot_parallel_axis()
         elif n == 3:
-            fig = go.Figure(data=[
-                go.Scatter3d(x=self._orig_data[cols[0]], y=self._orig_data[cols[1]], z=self._orig_data[cols[2]], 
-                    mode='markers', marker_color='blue', name=''),
-                go.Scatter3d(x=select[cols[0]], y=select[cols[1]], z=select[cols[2]], 
+            data=[
+                go.Scatter3d(
+                    x=self._orig_data[cols[0]], 
+                    y=self._orig_data[cols[1]], 
+                    z=self._orig_data[cols[2]], 
                     mode='markers', 
-                    marker_color='red', name='')
-            ])
+                    marker_color='blue', 
+                    name=''
+                ),
+                go.Scatter3d(
+                    x=select[cols[0]], 
+                    y=select[cols[1]], 
+                    z=select[cols[2]], 
+                    mode='markers', 
+                    marker_color='red', name=''
+                )
+            ]
             
-            fig.update_layout(showlegend=False)
-            fig.show()
-
         elif n == 2: 
-            fig = go.Figure(data=[
+            data=[
                 go.Scatter(
                     x=self._orig_data[cols[0]], 
                     y=self._orig_data[cols[1]], 
@@ -266,19 +290,24 @@ class _PointwiseDepth(_FunctionalDepthSeries):
                     marker_color='red', 
                     name=''
                 )
-            ])
-            
-            fig.update_layout(showlegend=False)
-            fig.show()
+            ]
         else: # n = 1, plot number line maybe
             pass
         
+        fig = go.Figure(
+            data=data, 
+            layout=go.Layout(title=title, xaxis_title=xaxis_title, yaxis_title=yaxis_title)
+        )
+
+        fig.update_layout(showlegend=False)
+
+        return fig if return_plot else fig.show()
+                
     def drop_outlying_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.drop(self.outlying(n=n).index, axis=0)
     
     def get_deep_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.loc[self.deepest(n=n).index, :]
-
 
     def plot_deepest(self, n=1) -> None:
         self._plot(self.deepest(n=n))

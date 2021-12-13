@@ -2,7 +2,13 @@ import pandas as pd
 import numpy as np
 from typing import Union, List
 
-def generate_noisy_univariate(data: Union[list, np.array]=None, n: int=20, columns=None, index=None) -> pd.DataFrame:
+def generate_noisy_univariate(
+    data: Union[list, np.array]=None, 
+    n: int=20, 
+    columns=None, 
+    index=None,
+    seed=None,
+) -> pd.DataFrame:
     """
     Generate n univariate functions that are equal to the given data plus some random pertubations. 
     Should be used for testing / understanding other methods in this library.
@@ -23,6 +29,8 @@ def generate_noisy_univariate(data: Union[list, np.array]=None, n: int=20, colum
     pd.DataFrame: n x p DataFrame of p real valued functions observed at n discrete time points. (So each column is a function)
 
     """
+
+    np.random.seed(seed)
 
     df = pd.DataFrame()
 
@@ -48,7 +56,8 @@ def generate_noisy_multivariate(
     n: int=10, 
     d: int=3, 
     columns=None, 
-    index=None
+    index=None,
+    seed=None,
 ) -> List[pd.DataFrame]:
     """
     Generate num_curves noisy multivariate functions with d features observed at n time points. 
@@ -74,6 +83,9 @@ def generate_noisy_multivariate(
     List[pd.DataFrame]: A list of num_curves multivariate functions (DataFrames)
 
     """
+    
+    np.random.seed(seed)
+
     fs = []
     
     if data is None:

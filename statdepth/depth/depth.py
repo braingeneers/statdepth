@@ -9,7 +9,7 @@ from .abstract import AbstractDepth
 
 __all__ = ['FunctionalDepth', 'PointcloudDepth', 'ProbabilisticDepth']
 
-# Private class that wraps the band depth calculation methods with some extra attributes as well
+# Private class that wraps the depth calculation methods with some extra attributes as well
 class _FunctionalDepthSeries(AbstractDepth, pd.Series):
 
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
@@ -181,11 +181,11 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
         return self._orig_data.loc[:, self.outlying(n=n).index]
 
 class _PointwiseDepth(_FunctionalDepthSeries):
-    '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''
-
     def __init__(self, df: pd.DataFrame, depths: pd.Series):
+        '''Pointwise depth calculation for Multivariate data. Calculates depth of each point with respect to the sample in R^n.'''
         super().__init__(df=df, depths=depths)
 
+    # This method should be removed eventually
     def plot_depths(
         self, 
         invert_colors=False, 
@@ -244,10 +244,10 @@ class _PointwiseDepth(_FunctionalDepthSeries):
     def _plot(
         self, 
         deep_or_outlying: pd.Series,
-        return_plot=False,
-        title='',
-        xaxis_title=None, 
-        yaxis_title=None,
+        return_plot: bool,
+        title: str,
+        xaxis_title: str, 
+        yaxis_title: str,
     ) -> None:
         n = len(self._orig_data.columns)
         cols = self._orig_data.columns
@@ -292,28 +292,49 @@ class _PointwiseDepth(_FunctionalDepthSeries):
                 )
             ]
         else: # n = 1, plot number line maybe
-            pass
+            raise ValueError(f'Error: Dimensionality of data must be >=2. Value found is {n}')
         
         fig = go.Figure(
             data=data, 
             layout=go.Layout(title=title, xaxis_title=xaxis_title, yaxis_title=yaxis_title)
         )
-
         fig.update_layout(showlegend=False)
 
         return fig if return_plot else fig.show()
-                
+
+    def plot_deepest(self, n=1,
+        return_plot=False,
+        title='',
+        xaxis_title=None, 
+        yaxis_title=None,
+    ) -> None:
+        return self._plot(
+            deep_or_outlying=self.deepest(n=n),
+            return_plot=return_plot,
+            title=title,
+            xaxis_title=xaxis_title,
+            yaxis_title=yaxis_title,
+        )
+
+    def plot_outlying(self, n=1,
+        return_plot=False,
+        title='',
+        xaxis_title=None, 
+        yaxis_title=None,
+    ) -> None:
+        return self._plot(
+            deep_or_outlying=self.outlying(n=n),
+            return_plot=return_plot,
+            title=title,
+            xaxis_title=xaxis_title,
+            yaxis_title=yaxis_title,
+        )
+     
     def drop_outlying_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.drop(self.outlying(n=n).index, axis=0)
     
     def get_deep_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.loc[self.deepest(n=n).index, :]
-
-    def plot_deepest(self, n=1) -> None:
-        self._plot(self.deepest(n=n))
-
-    def plot_outlying(self, n=1) -> None:
-        self._plot(self.outlying(n=n))
 
     def plot_distribution(self, invert_colors=False, marker=None) -> None:
         self.plot_depths(invert_colors, marker)
@@ -324,7 +345,7 @@ def PointcloudDepth(
     to_compute: pd.Index=None, 
     K=None, 
     containment='simplex', 
-    quiet=True
+    quiet=True,
 ) -> _PointwiseDepth:
     if K is not None:
         depth = _samplepointwisedepth(data=data, to_compute=to_compute, K=K, containment=containment)

@@ -7,7 +7,7 @@ from ..depth.abstract import AbstractDepth
 
 # Helper class 
 class FunctionalHomogeneity:
-    def __init__(self, F, G, method='p1', K=None, J=None, containment='r2', relax=False, deep_check=False, quiet=False):
+    def __init__(self, F, G, method='p1', K=None, J=2, containment='r2', relax=False, deep_check=False, quiet=False):
         self._orig_F = F 
         self._orig_G = G 
         self._hom = _functionalhomogeneity(

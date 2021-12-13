@@ -83,7 +83,7 @@ def generate_noisy_multivariate(
     List[pd.DataFrame]: A list of num_curves multivariate functions (DataFrames)
 
     """
-    
+
     np.random.seed(seed)
 
     fs = []
@@ -109,7 +109,8 @@ def generate_noisy_pointcloud(
     n: int=50, 
     d: int=2, 
     columns=None, 
-    index=None
+    index=None,
+    seed=None,
 ) -> pd.DataFrame:
     """
     Generate n d-dimensional points from the normal distribution over [0,1]
@@ -126,6 +127,7 @@ def generate_noisy_pointcloud(
         Index to use.
 
     """
+    np.random.seed(seed)
 
     df = pd.DataFrame(np.random.rand(n, d))
 

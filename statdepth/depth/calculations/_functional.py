@@ -242,7 +242,7 @@ def _univariate_band_depth(
         S_nj = 0
 
         # Get a list of all possible subsequences of samples (cols)
-        subseq = _helper._subsequences(list(data.columns), j)
+        subseq = _subsequences(list(data.columns), j)
 
         # Iterate over all subsequences
         for sequence in subseq:
@@ -280,7 +280,7 @@ def _simplex_depth(data: List[pd.DataFrame], curve: pd.DataFrame, J=2, relax=Fal
     n = len(data)
     depth = 0
     
-    subseq = _helper._subsequences([i for i in range(n)], d + 1)
+    subseq = _subsequences([i for i in range(n)], d + 1)
 
     for seq in subseq:
         cdata = [data[i] for i in seq]

@@ -45,7 +45,7 @@ def _poisson_depth(df: pd.DataFrame, curr: int, lim: int, tol: float, to_compute
     cols = list(df.columns)
     cols.remove(curr)
     
-    subseq = _helper._subsequences(cols, 2)
+    subseq = _subsequences(cols, 2)
     
     for sequence in subseq:
         i, j = sequence
@@ -103,7 +103,7 @@ def _normal_depth(means, stds, curr, f):
     cols = list(range(n))
     cols.remove(curr)
     S_nj = 0
-    subseq = _helper._subsequences(cols, 2)
+    subseq = _subsequences(cols, 2)
 
     for i in tqdm(range(len(subseq))):
         sequence = subseq[i]

@@ -1,3 +1,4 @@
+# Copyright, Regents of the University of California, 2021, all rights reserved
 import pandas as pd 
 from typing import Callable, List, Union, Dict
 import plotly.graph_objects as go

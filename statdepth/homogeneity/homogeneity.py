@@ -94,9 +94,8 @@ def _functionalhomogeneity(
         # Get deepest function in G
         G_deepest = G_depths.get_deep_data(n=1)
 
-        # Shitty hacky fix, will change this. Sorry if someone is reading this in the future and I didn't lol
         if 'g_deepest' in F.columns:
-            raise ValueError('Cannot have column named g_deepest in F')
+            F = F.drop('g_deepest', axis=1)
 
         # Append this to F and calculate it's depth with respect to the other samples in F
         F.loc[:, 'g_deepest'] = G_deepest
@@ -133,10 +132,7 @@ def _functionalhomogeneity(
 
             return depths_G_in_F.iloc[0] / G_depths.median().iloc[0]
         elif method == 'p4':
-            pass
-            # t1 = np.abs(self.PointcloudHomogeneity(F, G, K, J, containment, 'p3', relax, deepcheck) - self.PointcloudHomogeneity(F, F, K, J, containment, 'p1', relax, deepcheck))
-            # t2 = np.abs(self.PointcloudHomogeneity(F, G, K, J, containment, 'p3', relax, deepcheck) - self.PointcloudHomogeneity(G, G, K, J, containment, 'p1', relax, deepcheck))
-            # return t1 * t2
+            raise NotImplementedError()
         else:
             raise ValueError(f'{method} is not a valid depth method for the given data. Use one of [\'p1\', \'p2\', \'p3\', \'p4\']')
     else:

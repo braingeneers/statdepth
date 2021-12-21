@@ -3,11 +3,9 @@ import warnings
 from itertools import combinations
 from typing import Callable, List, Union
 from tqdm import tqdm
-
 import numpy as np
 import scipy as sp 
 import pandas as pd
-
 from scipy.special import comb, binom
 
 from ._containment import _r2_containment, _r2_enum_containment, _simplex_containment, _select_containment, _is_valid_containment, _is_in_simplex

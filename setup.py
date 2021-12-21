@@ -15,7 +15,8 @@ requirements = [
     "pandas",
     "numpy",
     "scipy",
-    "kaleido"
+    "kaleido",
+    "tqdm"
 ]
 
 setup_requirements = requirements.copy()
@@ -27,9 +28,9 @@ setup(
     author_email='jmlehrer@ucsc.edu',
     python_requires='>=3.6',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
@@ -38,21 +39,22 @@ setup(
     ],
     description="A library for computing statistical depth for univariate and multivariate functional data, and pointcloud data. Additionally, methods for homogeneity testing and visualization are provided.",
     install_requires=[
-    "plotly",
-    "pandas",
-    "numpy",
-    "scipy",
-    "numba"],
-    license="MIT license",
+        "plotly",
+        "pandas",
+        "numpy",
+        "scipy",
+        "tqdm"
+    ],
+    license="GPL license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
     keywords='statdepth',
     name='statdepth',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['tests', '*tutorial/*']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/braingeneers/functional_depth_methods',
-    version='0.7.17',
+    url='https://github.com/braingeneers/statdepth',
+    version='1.0.0',
     zip_safe=False,
 )

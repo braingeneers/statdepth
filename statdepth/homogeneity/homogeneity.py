@@ -92,7 +92,7 @@ def _functionalhomogeneity(
         G = G[0]
         
         # Get deepest function in G
-        G_deepest = G_depths.get_deep_data(n=1)
+        G_deepest = G_depths.get_deepest_data(n=1)
 
         if 'g_deepest' in F.columns:
             F = F.drop('g_deepest', axis=1)
@@ -166,7 +166,7 @@ def _pointcloudhomogeneity(
     hom = 0
 
     # Get deepest function in G
-    G_deepest = G_depths.get_deep_data(n=1)
+    G_deepest = G_depths.get_deepest_data(n=1)
     G_deepest.index = ['g_deepest']
 
     # Append this to F and calculate it's depth with respect to the other samples in F
@@ -244,7 +244,7 @@ def P1_homogeneity(
         quiet=quiet,
     )
     
-    G_deepest = G_depth.get_deep_data()
+    G_deepest = G_depth.get_deepest_data()
 
     F.loc[:, 'G_deepest'] = G_deepest
     

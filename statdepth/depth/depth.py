@@ -175,7 +175,7 @@ class _FunctionalDepthUnivariate(_FunctionalDepthSeries):
     def drop_outlying_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.drop(self.outlying(n=n).index, axis=1)
     
-    def get_deep_data(self, n=1) -> pd.DataFrame:
+    def get_deepest_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.loc[:, self.deepest(n=n).index]
 
     def get_outlying_data(self, n=1) -> pd.DataFrame:
@@ -334,7 +334,7 @@ class _PointwiseDepth(_FunctionalDepthSeries):
     def drop_outlying_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.drop(self.outlying(n=n).index, axis=0)
     
-    def get_deep_data(self, n=1) -> pd.DataFrame:
+    def get_deepest_data(self, n=1) -> pd.DataFrame:
         return self._orig_data.loc[self.deepest(n=n).index, :]
 
     def plot_distribution(self, invert_colors=False, marker=None) -> None:

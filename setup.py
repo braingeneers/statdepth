@@ -16,7 +16,8 @@ requirements = [
     "numpy",
     "scipy",
     "kaleido",
-    "tqdm"
+    "tqdm",
+    "openpyxl",
 ]
 
 setup_requirements = requirements.copy()
@@ -38,13 +39,7 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     description="A library for computing statistical depth for univariate and multivariate functional data, and pointcloud data. Additionally, methods for homogeneity testing and visualization are provided.",
-    install_requires=[
-        "plotly",
-        "pandas",
-        "numpy",
-        "scipy",
-        "tqdm"
-    ],
+    install_requires=requirements.copy(),
     license="GPL license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,

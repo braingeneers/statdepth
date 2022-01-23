@@ -52,6 +52,9 @@ class _FunctionalDepthSeries(AbstractDepth, pd.Series):
     def median(self):
         return self.deepest(n=1)
 
+    def quartile(self, ratio=0.5):
+        return self._depths.sort_values().head(int(self._depths.shape[0]*0.5))
+
     def get_depths(self):
         return self._depths
 

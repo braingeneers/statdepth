@@ -34,8 +34,6 @@ bd = FunctionalDepth([df], J=2, relax=False, quiet=False)
 print(bd.deepest(n=5))
 print(bd.outlying(n=5))
 
-
-
 n=3
 fig = bd.plot_deepest(n=n, return_plot=True, title=f'{n} Deepest Curves, Plotted in Red')
 fig.update_layout(width=750, height=750)
@@ -47,19 +45,16 @@ fig.write_image('ex1_outlying.pdf')
 
 print(bd.get_deepest_data(n=10).head())
 
-
 data = generate_noisy_multivariate(columns=list('ABC'), num_curves=10, seed=42)
 bd = FunctionalDepth(data, containment='simplex', relax=True, quiet=False)
 
 print(bd.ordered())
 
-
 df = generate_noisy_pointcloud(n=50, d=2, seed=42)
 bd = PointcloudDepth(df, K=7, containment='simplex', quiet=False)
+
 print(df.head())
-
 print(bd.deepest(n=5))
-
 
 fig = bd.plot_depths(invert_colors=True, return_plot=True, title='Pointcloud Depths, Deepest are Darkest')
 fig.update_layout(width=750, height=750)
